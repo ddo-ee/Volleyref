@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VolleyRef">
+<meta name="theme-color" content="#0d1f17">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VolleyRef — Second Referee System</title>
+<style>
+  :root {
+    --court-green: #1a3a2a;
+    --court-line: #f0e8d0;
+    --court-surface: #1f4433;
+    --team-a: #e8a020;
+    --team-b: #2090d8;
+    --team-a-dark: #b07010;
+    --team-b-dark: #1060a8;
+    --bg-dark: #0d1f17;
+    --bg-panel: #142a1e;
+    --bg-card: #1a3a28;
+    --text-primary: #f0ede6;
+    --text-secondary: #9ab09a;
+    --text-muted: #6a8a6a;
+    --border: #2a5a3a;
+    --danger: #e04040;
+    --success: #40c070;
+    --warn: #e0a020;
+    --font-main: 'Courier New', monospace;
+    --font-display: Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* ===================== TOP BAR ===================== */
+  #topbar {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  #topbar .logo {
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--court-line);
+  }
+  #topbar .logo span { color: var(--team-a); }
+  #nav-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-tab {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: var(--font-main);
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .nav-tab.active { background: var(--court-surface); color: var(--court-line); border-color: var(--court-line); }
+  .nav-tab:hover:not(.active) { color: var(--text-primary); border-color: var(--text-muted); }
+
+  /* ===================== VIEWS ===================== */
+  .view { display: none; padding: 16px; }
+  .view.active { display: block; }
+
+  /* ===================== SCORE HEADER ===================== */
+  #score-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+  .team-score-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+  }
+  .team-score-block.team-a { border-top: 3px solid var(--team-a); }
+  .team-score-block.team-b { border-top: 3px solid var(--team-b); }
+  .team-name-label { font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; }
+  .team-name-val { font-size: 18px; font-family: var(--font-display); margin: 2px 0; }
+  .team-score-big { font-size: 52px; font-weight: bold; line-height: 1; }
+  .team-a .team-score-big { color: var(--team-a); }
+  .team-b .team-score-big { color: var(--team-b); }
+  .team-sets { font-size: 12px; color: var(--text-secondary); }
+
+  #center-info { text-align: center; }
+  #set-display { font-size: 28px; font-family: var(--font-display); color: var(--court-line); }
+  #set-label { font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; }
+  #serve-indicator { margin-top: 8px; font-size: 11px; color: var(--warn); }
+
+  /* ===================== MAIN GRID ===================== */
+  #main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 14px;
+  }
+  .panel-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+  /* ===================== ROTATION DISPLAY ===================== */
+  .rotation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 5px;
+    aspect-ratio: 2/3;
+    max-height: 180px;
+  }
+  .pos-cell {
+    background: var(--court-surface);
+    border: 1px solid #2a6a4a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .pos-cell:hover { border-color: var(--court-line); }
+  .pos-cell.libero { background: #1a2a4a; border-color: #3a5a8a; color: #6ab0e0; }
+  .pos-cell.serving { background: #3a2a0a; border-color: var(--warn); }
+  .pos-cell .pnum { font-size: 16px; }
+  .pos-cell .plabel { font-size: 9px; color: var(--text-muted); letter-spacing: 1px; }
+  .pos-num-label {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 8px;
+    color: var(--text-muted);
+  }
+
+  /* ===================== TIMEOUTS & SUBS ===================== */
+  .resource-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .resource-label { font-size: 11px; color: var(--text-secondary); }
+  .resource-dots { display: flex; gap: 5px; }
+  .dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-dark);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .dot.used-a { background: var(--team-a); border-color: var(--team-a-dark); }
+  .dot.used-b { background: var(--team-b); border-color: var(--team-b-dark); }
+  .dot.available { background: var(--court-surface); border-color: var(--success); }
+  .resource-btn {
+    font-family: var(--font-main);
+    font-size: 10px;
+    padding: 4px 10px;
+    border: 1px solid;
+    cursor: pointer;
+    background: transparent;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+  .btn-a { color: var(--team-a); border-color: var(--team-a); }
+  .btn-a:hover { background: rgba(232,160,32,0.15); }
+  .btn-b { color: var(--team-b); border-color: var(--team-b); }
+  .btn-b:hover { background: rgba(32,144,216,0.15); }
+  .btn-warn { color: var(--warn); border-color: var(--warn); }
+  .btn-danger { color: var(--danger); border-color: var(--danger); }
+  .btn-success { color: var(--success); border-color: var(--success); }
+  .btn-neutral { color: var(--text-secondary); border-color: var(--border); }
+  .btn-neutral:hover { color: var(--text-primary); }
+  .btn-big {
+    font-family: var(--font-main);
+    font-size: 13px;
+    padding: 8px 18px;
+    border: 1px solid;
+    cursor: pointer;
+    background: transparent;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.15s;
+    display: inline-block;
+  }
+  .setup-header,
+  .summary-header {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .match-rules-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .game-score-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .summary-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .summary-meta-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .leaderboard-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .leaderboard-team-title {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  /* ===================== SUB LOG ===================== */
+  .sub-item {
+    font-size: 11px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+  .sub-item .sub-invalid { color: var(--danger); font-size: 10px; }
+  .sub-item .sub-valid { color: var(--success); font-size: 10px; }
+
+  /* ===================== SCORE LOG ===================== */
+  #score-log {
+    max-height: 180px;
+    overflow-y: auto;
+  }
+  .log-item {
+    font-size: 11px;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .log-item .log-tag-a { color: var(--team-a); }
+  .log-item .log-tag-b { color: var(--team-b); }
+
+  /* ===================== ALERT ===================== */
+  #alert-bar {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-panel);
+    border: 1px solid var(--warn);
+    color: var(--warn);
+    padding: 10px 24px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    z-index: 999;
+    display: none;
+    min-width: 280px;
+    text-align: center;
+  }
+
+  /* ===================== COURT VIEW ===================== */
+  #court-outer {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    flex-direction: column;
+  }
+  #court-svg-wrap {
+    width: 100%;
+  }
+  #court-controls {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto auto 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  #court-svg {
+    width: 100%;
+    border: 2px solid #2a5a3a;
+  }
+  .player-circle {
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .player-circle circle { transition: all 0.15s; }
+  .player-circle.selected circle { filter: drop-shadow(0 0 6px rgba(255,255,0,0.8)); }
+  .player-circle text { pointer-events: none; user-select: none; font-family: var(--font-main); font-weight: bold; }
+
+  .court-action-panel { margin-top: 12px; }
+  .last-touch-display {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    min-height: 60px;
+  }
+  .last-touch-label { font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; }
+  .last-touch-val { font-size: 20px; margin-top: 4px; }
+
+  #score-confirm-btn {
+    width: 100%;
+    padding: 14px;
+    background: rgba(64,192,112,0.1);
+    border: 2px solid var(--success);
+    color: var(--success);
+    font-family: var(--font-main);
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: block;
+    margin-bottom: 8px;
+  }
+  #score-confirm-btn:hover { background: rgba(64,192,112,0.25); }
+  #score-confirm-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  #clear-touch-btn {
+    width: 100%;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-main);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  #clear-touch-btn:hover { color: var(--text-primary); }
+
+  /* ===================== SETUP VIEW ===================== */
+  .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .setup-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 16px;
+  }
+  .setup-panel h3 {
+    font-family: var(--font-display);
+    font-size: 15px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .setup-panel h3.team-a-h { color: var(--team-a); }
+  .setup-panel h3.team-b-h { color: var(--team-b); }
+  .field-row { margin-bottom: 8px; }
+  .field-row label { display: block; font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+  .field-row input, .field-row select {
+    width: 100%;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 6px 8px;
+    font-family: var(--font-main);
+    font-size: 13px;
+  }
+  .players-setup { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 8px; }
+  .player-num-input {
+    background: var(--court-surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 5px 2px;
+    font-family: var(--font-main);
+    font-size: 12px;
+    text-align: center;
+    width: 100%;
+  }
+  .player-num-label { font-size: 9px; color: var(--text-muted); text-align: center; margin-bottom: 2px; }
+
+  /* ===================== SUMMARY VIEW ===================== */
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .stat-label { color: var(--text-secondary); }
+  .stat-val-a { color: var(--team-a); font-weight: bold; }
+  .stat-val-b { color: var(--team-b); font-weight: bold; }
+
+  .set-history { margin-top: 12px; }
+  .set-history-row { display: grid; grid-template-columns: auto 1fr 1fr; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+
+  /* ===================== CONFIRM MODAL ===================== */
+  #modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+  }
+  #modal-overlay.open { display: flex; }
+  #modal-box {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 24px;
+    max-width: 360px;
+    width: 90%;
+  }
+  #modal-title { font-family: var(--font-display); font-size: 18px; margin-bottom: 12px; }
+  #modal-body { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6; }
+  #modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* ===================== RESPONSIVE ===================== */
+  @media (max-width: 1024px) {
+    .match-rules-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #court-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 700px) {
+    #main-grid { grid-template-columns: 1fr; }
+    .setup-grid { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: 1fr; }
+    #score-header { grid-template-columns: 1fr; }
+    #court-outer { flex-direction: column; }
+    #court-controls { width: 100%; grid-template-columns: 1fr; }
+    .game-score-actions { grid-template-columns: 1fr; }
+    .match-rules-grid { grid-template-columns: 1fr; }
+    .leaderboard-split { grid-template-columns: 1fr; }
+    .summary-meta { grid-template-columns: 1fr; }
+    .team-score-big { font-size: 40px; }
+    .rotation-grid { max-height: none; }
+    .view { padding: 12px; }
+    .btn-big { width: 100%; text-align: center; }
+  }
+  @media (max-width: 560px) {
+    .players-setup { grid-template-columns: repeat(3, 1fr); }
+    #topbar { padding: 10px 12px; }
+    .nav-tab { flex: 1 1 calc(50% - 4px); text-align: center; }
+    .team-name-val { font-size: 16px; }
+    #set-display { font-size: 24px; }
+    #alert-bar { min-width: 0; width: calc(100% - 24px); }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg-dark); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="logo">VOLLEY<span>REF</span></div>
+  <div id="nav-tabs">
+    <button class="nav-tab active" onclick="switchView('setup')">Setup</button>
+    <button class="nav-tab" onclick="switchView('game')">Game</button>
+    <button class="nav-tab" onclick="switchView('court')">Court</button>
+    <button class="nav-tab" onclick="switchView('summary')">Summary</button>
+  </div>
+</div>
+
+<!-- ===================== SETUP VIEW ===================== -->
+<div id="view-setup" class="view active">
+  <div style="max-width:800px;margin:0 auto">
+    <div class="setup-header">
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Match Setup</div>
+        <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Configure Teams & Roster</div>
+      </div>
+      <button class="btn-big btn-success" onclick="startGame()">Start Match ▶</button>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border);padding:14px;margin-bottom:16px">
+      <div class="panel-title">Match Rules</div>
+      <div class="match-rules-grid">
+        <div class="field-row">
+          <label>Sets to Win</label>
+          <select id="sets-to-win">
+            <option value="3">Best of 5 (3 sets)</option>
+            <option value="2">Best of 3 (2 sets)</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label>Points per Set</label>
+          <div id="pts-per-set-info" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:6px 8px;font-family:var(--font-main);font-size:13px">
+            Sets 1-4: 25 points, deciding set: 15 points
+          </div>
+        </div>
+        <div class="field-row">
+          <label>Max Substitutions</label>
+          <select id="max-subs">
+            <option value="6">6 per set</option>
+            <option value="12">12 per set (FIVB 2024)</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label>First Server</label>
+          <select id="first-server">
+            <option value="A">Team A serves first</option>
+            <option value="B">Team B serves first</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-grid">
+      <!-- TEAM A -->
+      <div class="setup-panel">
+        <h3 class="team-a-h">Team A</h3>
+        <div class="field-row"><label>Team Name</label><input id="teamA-name" value="Team A" placeholder="Team name"/></div>
+        <div class="field-row"><label>Libero Jersey #</label><input id="teamA-libero" type="number" value="0" placeholder="0 = none"/></div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:10px;margin-bottom:4px">Player Jerseys (Pos 1–6)</div>
+        <div class="players-setup" id="teamA-players"></div>
+      </div>
+      <!-- TEAM B -->
+      <div class="setup-panel">
+        <h3 class="team-b-h">Team B</h3>
+        <div class="field-row"><label>Team Name</label><input id="teamB-name" value="Team B" placeholder="Team name"/></div>
+        <div class="field-row"><label>Libero Jersey #</label><input id="teamB-libero" type="number" value="0" placeholder="0 = none"/></div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:10px;margin-bottom:4px">Player Jerseys (Pos 1–6)</div>
+        <div class="players-setup" id="teamB-players"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== GAME VIEW ===================== -->
+<div id="view-game" class="view">
+  <!-- Score Header -->
+  <div id="score-header">
+    <div class="team-score-block team-a">
+      <div class="team-name-label">Team A</div>
+      <div class="team-name-val" id="display-nameA">Team A</div>
+      <div class="team-score-big" id="scoreA-big">0</div>
+      <div class="team-sets">Sets: <span id="setsA">0</span></div>
+    </div>
+    <div id="center-info">
+      <div id="set-label">SET</div>
+      <div id="set-display">1</div>
+      <div id="serve-indicator">● Serving: —</div>
+      <div style="margin-top:8px;display:flex;gap:6px;justify-content:center">
+        <button class="resource-btn btn-neutral" onclick="undoLastPoint()">↩ Undo</button>
+        <button class="resource-btn btn-warn" onclick="newSet()">New Set</button>
+      </div>
+    </div>
+    <div class="team-score-block team-b">
+      <div class="team-name-label">Team B</div>
+      <div class="team-name-val" id="display-nameB">Team B</div>
+      <div class="team-score-big" id="scoreB-big">0</div>
+      <div class="team-sets">Sets: <span id="setsB">0</span></div>
+    </div>
+  </div>
+
+  <!-- Score Buttons -->
+  <div class="game-score-actions">
+    <button class="btn-big btn-a" style="width:100%;padding:16px;font-size:16px" onclick="addPoint('A')">+ POINT — TEAM A</button>
+    <button class="btn-big btn-b" style="width:100%;padding:16px;font-size:16px" onclick="addPoint('B')">+ POINT — TEAM B</button>
+  </div>
+
+  <div id="main-grid">
+    <!-- TEAM A Panel -->
+    <div class="panel">
+      <div class="panel-title" style="color:var(--team-a)">Team A — Rotation & Resources</div>
+
+      <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-bottom:5px;text-transform:uppercase">Rotation</div>
+      <div class="rotation-grid" id="rotA"></div>
+
+      <div style="margin-top:12px">
+        <div class="resource-row">
+          <div class="resource-label">Timeouts</div>
+          <div class="resource-dots" id="toA-dots"></div>
+          <button class="resource-btn btn-a" onclick="useTimeout('A')">Use TO</button>
+        </div>
+        <div class="resource-row">
+          <div class="resource-label">Substitutions (<span id="subsA-count">0</span>/6)</div>
+          <button class="resource-btn btn-a" onclick="openSubModal('A')">Substitute</button>
+        </div>
+        <div id="sublog-A" style="max-height:80px;overflow-y:auto;margin-top:4px"></div>
+      </div>
+
+      <div style="margin-top:10px;display:flex;gap:6px">
+        <button class="resource-btn btn-a" onclick="rotateTeam('A','fwd')">Rotate ▶</button>
+        <button class="resource-btn btn-neutral" onclick="rotateTeam('A','back')">◀ Back</button>
+      </div>
+    </div>
+
+    <!-- TEAM B Panel -->
+    <div class="panel">
+      <div class="panel-title" style="color:var(--team-b)">Team B — Rotation & Resources</div>
+
+      <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-bottom:5px;text-transform:uppercase">Rotation</div>
+      <div class="rotation-grid" id="rotB"></div>
+
+      <div style="margin-top:12px">
+        <div class="resource-row">
+          <div class="resource-label">Timeouts</div>
+          <div class="resource-dots" id="toB-dots"></div>
+          <button class="resource-btn btn-b" onclick="useTimeout('B')">Use TO</button>
+        </div>
+        <div class="resource-row">
+          <div class="resource-label">Substitutions (<span id="subsB-count">0</span>/6)</div>
+          <button class="resource-btn btn-b" onclick="openSubModal('B')">Substitute</button>
+        </div>
+        <div id="sublog-B" style="max-height:80px;overflow-y:auto;margin-top:4px"></div>
+      </div>
+
+      <div style="margin-top:10px;display:flex;gap:6px">
+        <button class="resource-btn btn-b" onclick="rotateTeam('B','fwd')">Rotate ▶</button>
+        <button class="resource-btn btn-neutral" onclick="rotateTeam('B','back')">◀ Back</button>
+      </div>
+    </div>
+
+    <!-- Score Log -->
+    <div class="panel">
+      <div class="panel-title">Point Log — Current Set</div>
+      <div id="score-log"></div>
+    </div>
+
+    <!-- Serve & Validation -->
+    <div class="panel">
+      <div class="panel-title">Serve & Validation</div>
+      <div style="margin-bottom:10px">
+        <div class="resource-label" style="margin-bottom:4px">Current Server</div>
+        <div id="server-info" style="font-size:14px;color:var(--court-line)">—</div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div class="resource-label" style="margin-bottom:4px">Rotation Check</div>
+        <div id="rotation-status" style="font-size:12px;color:var(--success)">● Valid</div>
+      </div>
+      <div>
+        <div class="resource-label" style="margin-bottom:4px">Last Action</div>
+        <div id="last-action" style="font-size:11px;color:var(--text-secondary)">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== COURT VIEW ===================== -->
+<div id="view-court" class="view">
+  <div style="margin-bottom:12px">
+    <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Technical Committee</div>
+    <div style="font-family:var(--font-display);font-size:20px;color:var(--court-line)">Court — Touch & Score</div>
+    <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Tap a player who last touched the ball, then confirm the point.</div>
+  </div>
+
+  <div id="court-outer">
+    <div id="court-svg-wrap">
+      <svg id="court-svg" viewBox="0 0 560 280" xmlns="http://www.w3.org/2000/svg">
+        <rect width="560" height="280" fill="#1a3a28"/>
+        <rect x="20" y="20" width="520" height="240" fill="none" stroke="#c8b870" stroke-width="2"/>
+        <line x1="280" y1="10" x2="280" y2="270" stroke="#c8b870" stroke-width="3"/>
+        <line x1="280" y1="10" x2="280" y2="20" stroke="#c8b870" stroke-width="4"/>
+        <line x1="280" y1="260" x2="280" y2="270" stroke="#c8b870" stroke-width="4"/>
+        <line x1="193" y1="20" x2="193" y2="260" stroke="#c8b870" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <line x1="367" y1="20" x2="367" y2="260" stroke="#c8b870" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <text x="140" y="13" text-anchor="middle" fill="#e8a020" font-size="9" font-family="Courier New" font-weight="bold" id="svg-labelA">TEAM A</text>
+        <text x="420" y="13" text-anchor="middle" fill="#2090d8" font-size="9" font-family="Courier New" font-weight="bold" id="svg-labelB">TEAM B</text>
+        <text x="280" y="278" text-anchor="middle" fill="#c8b870" font-size="8" font-family="Courier New">NET</text>
+        <text x="8" y="140" text-anchor="middle" fill="#6a8a6a" font-size="7" font-family="Courier New" transform="rotate(-90,8,140)">REFEREE</text>
+        <g id="court-players"></g>
+      </svg>
+    </div>
+
+    <div id="court-controls">
+      <div class="last-touch-display" style="min-width:160px">
+        <div class="last-touch-label">Last Touch</div>
+        <div class="last-touch-val" id="last-touch-val">—</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px" id="last-touch-team">Tap a player on court</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:6px;min-width:160px">
+        <button id="score-confirm-btn" onclick="confirmCourtPoint()" disabled>
+          ✓ CONFIRM POINT
+        </button>
+        <button id="clear-touch-btn" onclick="clearTouch()">✕ Clear Selection</button>
+
+        <div style="margin-top:6px">
+          <div class="panel-title">Score</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+            <div style="text-align:center">
+              <div style="font-size:11px;color:var(--team-a)" id="court-nameA">Team A</div>
+              <div style="font-size:30px;color:var(--team-a);font-weight:bold" id="court-scoreA">0</div>
+            </div>
+            <div style="font-size:18px;color:var(--text-muted)">:</div>
+            <div style="text-align:center">
+              <div style="font-size:11px;color:var(--team-b)" id="court-nameB">Team B</div>
+              <div style="font-size:30px;color:var(--team-b);font-weight:bold" id="court-scoreB">0</div>
+            </div>
+          </div>
+          <div style="text-align:center;font-size:10px;color:var(--text-muted);margin-top:2px">SET <span id="court-set">1</span></div>
+        </div>
+      </div>
+
+      <div style="grid-column:3/5">
+        <div class="panel-title">Player Stats (Points)</div>
+        <div id="player-stats" style="max-height:160px;overflow-y:auto;font-size:11px;columns:2;column-gap:12px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SUMMARY VIEW ===================== -->
+<div id="view-summary" class="view">
+  <div class="summary-header">
+    <div>
+      <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Match Summary</div>
+      <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Statistics & Overview</div>
+    </div>
+    <button class="btn-big btn-danger" onclick="resetAll()">Reset Match</button>
+  </div>
+
+  <div id="winner-banner" style="display:none;text-align:center;padding:20px;background:var(--bg-card);border:1px solid var(--warn);margin-bottom:16px">
+    <div style="font-size:11px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Match Winner</div>
+    <div style="font-size:32px;font-family:var(--font-display);color:var(--warn)" id="winner-name">—</div>
+  </div>
+
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-title">Match Overview</div>
+    <div class="summary-meta">
+      <div class="summary-meta-item"><span class="stat-label">Game Number</span><span id="sum-game-number">1</span></div>
+      <div class="summary-meta-item"><span class="stat-label">Sets Played</span><span id="sum-sets-played">0</span></div>
+      <div class="summary-meta-item"><span class="stat-label">Winner</span><span id="sum-winner">-</span></div>
+      <div class="summary-meta-item"><span class="stat-label">First Server</span><span id="sum-first-server">-</span></div>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="panel">
+      <div class="panel-title">Match Stats</div>
+      <div class="stat-row"><span class="stat-label">Sets Won</span><span class="stat-val-a" id="sum-setsA">0</span><span style="color:var(--text-muted)">/</span><span class="stat-val-b" id="sum-setsB">0</span></div>
+      <div class="stat-row"><span class="stat-label">Total Points</span><span class="stat-val-a" id="sum-ptsA">0</span><span style="color:var(--text-muted)">/</span><span class="stat-val-b" id="sum-ptsB">0</span></div>
+      <div class="stat-row"><span class="stat-label">Timeouts Used</span><span class="stat-val-a" id="sum-toA">0</span><span style="color:var(--text-muted)">/</span><span class="stat-val-b" id="sum-toB">0</span></div>
+      <div class="stat-row"><span class="stat-label">Substitutions</span><span class="stat-val-a" id="sum-subA">0</span><span style="color:var(--text-muted)">/</span><span class="stat-val-b" id="sum-subB">0</span></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Leaderboard</div>
+      <div class="leaderboard-split">
+        <div>
+          <div class="leaderboard-team-title" style="color:var(--team-a)" id="leaderboard-title-a">Team A</div>
+          <div id="top-scorers-a"></div>
+        </div>
+        <div>
+          <div class="leaderboard-team-title" style="color:var(--team-b)" id="leaderboard-title-b">Team B</div>
+          <div id="top-scorers-b"></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Set History</div>
+      <div class="set-history">
+        <div class="set-history-row" style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">
+          <span>Set</span><span>Team A</span><span>Team B</span>
+        </div>
+        <div id="set-history-rows"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Substitution Log</div>
+      <div id="full-sub-log" style="max-height:200px;overflow-y:auto;font-size:11px;color:var(--text-secondary)"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ALERT BAR -->
+<div id="alert-bar"></div>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div id="modal-title"></div>
+    <div id="modal-body"></div>
+    <div id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- SUB MODAL -->
+<div id="sub-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center">
+  <div style="background:var(--bg-panel);border:1px solid var(--border);padding:24px;max-width:380px;width:90%">
+    <div style="font-family:var(--font-display);font-size:18px;margin-bottom:12px" id="sub-modal-title">Substitution</div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px" id="sub-modal-info"></div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px">Player OUT (current jersey)</label>
+      <select id="sub-out" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:8px;font-family:var(--font-main);font-size:13px"></select>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px">Player IN (jersey number)</label>
+      <input id="sub-in-jersey" type="number" placeholder="Enter jersey #" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:8px;font-family:var(--font-main);font-size:13px"/>
+    </div>
+    <div id="sub-validation-msg" style="font-size:11px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="resource-btn btn-neutral" onclick="closeSubModal()">Cancel</button>
+      <button class="resource-btn btn-success" onclick="confirmSub()">Confirm Sub</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEXT SET MODAL -->
+<div id="set-config-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:610;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--bg-panel);border:1px solid var(--border);padding:20px;max-width:920px;width:100%;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Set Configuration</div>
+        <div style="font-family:var(--font-display);font-size:20px;color:var(--court-line)" id="set-config-title">Configure Next Set</div>
+      </div>
+      <button class="resource-btn btn-neutral" onclick="closeSetConfigModal()">Close</button>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border);padding:12px;margin-bottom:16px">
+      <div class="match-rules-grid">
+        <div class="field-row">
+          <label>Serving First This Set</label>
+          <select id="next-set-serving">
+            <option value="A">Team A serves first</option>
+            <option value="B">Team B serves first</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label>Team A Libero</label>
+          <input id="next-teamA-libero" type="number" value="0" placeholder="0 = none"/>
+        </div>
+        <div class="field-row">
+          <label>Team B Libero</label>
+          <input id="next-teamB-libero" type="number" value="0" placeholder="0 = none"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-grid">
+      <div class="setup-panel">
+        <h3 class="team-a-h" id="next-teamA-title">Team A</h3>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:10px;margin-bottom:4px">Set Lineup (Pos 1–6)</div>
+        <div class="players-setup" id="next-teamA-players"></div>
+      </div>
+      <div class="setup-panel">
+        <h3 class="team-b-h" id="next-teamB-title">Team B</h3>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:10px;margin-bottom:4px">Set Lineup (Pos 1–6)</div>
+        <div class="players-setup" id="next-teamB-players"></div>
+      </div>
+    </div>
+
+    <div id="set-config-validation-msg" style="font-size:11px;margin-top:12px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px">
+      <button class="resource-btn btn-neutral" onclick="closeSetConfigModal()">Cancel</button>
+      <button class="resource-btn btn-success" onclick="confirmNextSetSetup()">Start Next Set</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== STATE =====================
+let state = {
+  teamA: { name: 'Team A', roster: [1,2,3,4,5,6], libero: 0,
+    rotation: [1,2,3,4,5,6], timeouts: 2, subsUsed: 0, subsLog: [],
+    totalPts: 0, setsWon: 0, toUsed: 0, totalSubs: 0 },
+  teamB: { name: 'Team B', roster: [1,2,3,4,5,6], libero: 0,
+    rotation: [1,2,3,4,5,6], timeouts: 2, subsUsed: 0, subsLog: [],
+    totalPts: 0, setsWon: 0, toUsed: 0, totalSubs: 0 },
+  scoreA: 0, scoreB: 0,
+  currentSet: 1,
+  matchNumber: 1,
+  serving: 'A',
+  firstServer: 'A',
+  setHistory: [],
+  allSubsLog: [],
+  pointLog: [],
+  playerPoints: {}, // "A:12" -> points
+  maxSubs: 6,
+  setsToWin: 3,
+  ptsPerSet: 25,
+  gameStarted: false,
+  matchEnded: false,
+  summaryExported: false,
+  currentSubTeam: null,
+  lastTouchPlayer: null,
+  lastTouchTeam: null,
+};
+
+const TEAM_LAYOUTS = {
+  A: {
+    courtPositions: {
+      pos1: { x: 55,  y: 220 },
+      pos2: { x: 245, y: 220 },
+      pos3: { x: 245, y: 140 },
+      pos4: { x: 245, y: 60  },
+      pos5: { x: 55,  y: 60  },
+      pos6: { x: 55,  y: 140 }
+    },
+    rotationGrid: {
+      headers: ['Back ◀', '▶ Net'],
+      order: ['pos5', 'pos4', 'pos6', 'pos3', 'pos1', 'pos2']
+    }
+  },
+  B: {
+    courtPositions: {
+      pos1: { x: 480, y: 60  },
+      pos2: { x: 315, y: 60  },
+      pos3: { x: 315, y: 140 },
+      pos4: { x: 315, y: 220 },
+      pos5: { x: 480, y: 220 },
+      pos6: { x: 480, y: 140 }
+    },
+    rotationGrid: {
+      headers: ['◀ Net','Back ▶'],
+      order: ['pos2', 'pos1', 'pos3', 'pos6', 'pos4', 'pos5']
+    }
+  }
+};
+
+// Sub tracking: jerseys that have been sub'd in/out per team per set
+let subRegistry = { A: {}, B: {} };
+const MATCH_NUMBER_KEY = 'volleyref-next-match-number';
+
+function getTeamState(team) {
+  return team === 'A' ? state.teamA : state.teamB;
+}
+
+function getNextMatchNumber() {
+  const stored = parseInt(localStorage.getItem(MATCH_NUMBER_KEY), 10);
+  return Number.isFinite(stored) && stored > 0 ? stored : 1;
+}
+
+function reserveNextMatchNumber() {
+  localStorage.setItem(MATCH_NUMBER_KEY, String(state.matchNumber + 1));
+}
+
+function getPointsTargetForSet(setNumber) {
+  const decidingSet = state.setsToWin === 2 ? 3 : 5;
+  return setNumber === decidingSet ? 15 : 25;
+}
+
+function updatePointsPerSetInfo() {
+  const el = document.getElementById('pts-per-set-info');
+  if (!el) return;
+  el.textContent = state.setsToWin === 2
+    ? 'Sets 1-2: 25 points, Set 3: 15 points'
+    : 'Sets 1-4: 25 points, Set 5: 15 points';
+}
+
+function getPositionIndex(posKey) {
+  return parseInt(posKey.replace('pos', ''), 10) - 1;
+}
+
+function getCourtPositionList(team) {
+  const layout = TEAM_LAYOUTS[team].courtPositions;
+  return [
+    layout.pos1,
+    layout.pos2,
+    layout.pos3,
+    layout.pos4,
+    layout.pos5,
+    layout.pos6
+  ];
+}
+
+// ===================== SETUP =====================
+function initSetupUI() {
+  const setsToWinEl = document.getElementById('sets-to-win');
+  if (setsToWinEl) {
+    setsToWinEl.onchange = () => {
+      state.setsToWin = parseInt(setsToWinEl.value, 10) || 3;
+      updatePointsPerSetInfo();
+    };
+  }
+  state.setsToWin = parseInt(document.getElementById('sets-to-win').value, 10) || 3;
+  updatePointsPerSetInfo();
+
+  ['A','B'].forEach(t => {
+    const el = document.getElementById('team'+t+'-players');
+    el.innerHTML = '';
+    for (let i = 1; i <= 6; i++) {
+      const div = document.createElement('div');
+      div.innerHTML = `<div class="player-num-label">Pos ${i}</div>
+        <input class="player-num-input" type="number" id="p${t}${i}" value="${i}" min="0" step="1"/>`;
+      el.appendChild(div);
+    }
+  });
+
+  ['A', 'B'].forEach(t => {
+    const el = document.getElementById('next-team' + t + '-players');
+    el.innerHTML = '';
+    for (let i = 1; i <= 6; i++) {
+      const div = document.createElement('div');
+      div.innerHTML = `<div class="player-num-label">Pos ${i}</div>
+        <input class="player-num-input" type="number" id="n${t}${i}" value="${i}" min="0" step="1"/>`;
+      el.appendChild(div);
+    }
+  });
+}
+
+function startGame() {
+  // Read setup
+  state.teamA.name = document.getElementById('teamA-name').value || 'Team A';
+  state.teamB.name = document.getElementById('teamB-name').value || 'Team B';
+  state.teamA.libero = parseInt(document.getElementById('teamA-libero').value) || 0;
+  state.teamB.libero = parseInt(document.getElementById('teamB-libero').value) || 0;
+  state.setsToWin = parseInt(document.getElementById('sets-to-win').value);
+  state.ptsPerSet = getPointsTargetForSet(1);
+  state.maxSubs = parseInt(document.getElementById('max-subs').value);
+  state.firstServer = document.getElementById('first-server').value;
+  state.matchNumber = getNextMatchNumber();
+
+  let rA = [], rB = [];
+  for (let i = 1; i <= 6; i++) {
+    rA.push(parseInt(document.getElementById('pA'+i).value) || i);
+    rB.push(parseInt(document.getElementById('pB'+i).value) || i);
+  }
+  state.teamA.roster = [...rA];
+  state.teamB.roster = [...rB];
+  state.teamA.rotation = [...rA];
+  state.teamB.rotation = [...rB];
+  state.teamA.totalPts = 0;
+  state.teamB.totalPts = 0;
+  state.teamA.setsWon = 0;
+  state.teamB.setsWon = 0;
+  state.teamA.toUsed = 0;
+  state.teamB.toUsed = 0;
+  state.teamA.totalSubs = 0;
+  state.teamB.totalSubs = 0;
+  state.setHistory = [];
+  state.allSubsLog = [];
+  state.playerPoints = {};
+  state.serving = state.firstServer;
+  state.currentSet = 1;
+  state.matchEnded = false;
+  state.summaryExported = false;
+
+  state.gameStarted = true;
+  resetSetState();
+  switchView('game');
+  renderAll();
+  showAlert('Match started! ' + state.teamA.name + ' vs ' + state.teamB.name, 'success');
+}
+
+// ===================== GAME LOGIC =====================
+function resetSetState() {
+  state.scoreA = 0; state.scoreB = 0;
+  state.teamA.timeouts = 2; state.teamB.timeouts = 2;
+  state.teamA.subsUsed = 0; state.teamB.subsUsed = 0;
+  state.teamA.subsLog = []; state.teamB.subsLog = [];
+  state.pointLog = [];
+  subRegistry = { A: {}, B: {} };
+}
+
+function addPoint(team) {
+  if (!state.gameStarted) { showAlert('Start match first!', 'warn'); return; }
+  if (team === 'A') {
+    state.scoreA++;
+    state.teamA.totalPts++;
+    // Track server point
+    if (state.lastTouchPlayer && state.lastTouchTeam === 'A') trackPlayerPoint('A', state.lastTouchPlayer);
+  } else {
+    state.scoreB++;
+    state.teamB.totalPts++;
+    if (state.lastTouchPlayer && state.lastTouchTeam === 'B') trackPlayerPoint('B', state.lastTouchPlayer);
+  }
+
+  let wasServing = state.serving;
+  if (team !== state.serving) {
+    // Side out — rotate receiving team
+    rotateTeamState(team);
+    state.serving = team;
+  }
+
+  state.pointLog.push({ scoreA: state.scoreA, scoreB: state.scoreB, team, set: state.currentSet });
+  document.getElementById('last-action').textContent = 'Point to ' + (team==='A'?state.teamA.name:state.teamB.name) + ' (' + state.scoreA + '-' + state.scoreB + ')';
+
+  checkSetWin();
+  renderAll();
+}
+
+function trackPlayerPoint(team, jersey) {
+  const key = team + ':' + jersey;
+  state.playerPoints[key] = (state.playerPoints[key] || 0) + 1;
+}
+
+function undoLastPoint() {
+  if (state.pointLog.length === 0) { showAlert('Nothing to undo', 'warn'); return; }
+  const last = state.pointLog.pop();
+  state.scoreA = last.scoreA - (last.team === 'A' ? 1 : 0);
+  state.scoreB = last.scoreB - (last.team === 'B' ? 1 : 0);
+  if (last.team === 'A') state.teamA.totalPts = Math.max(0, state.teamA.totalPts - 1);
+  else state.teamB.totalPts = Math.max(0, state.teamB.totalPts - 1);
+  // Revert serving if changed
+  const prev = state.pointLog.length > 0 ? state.pointLog[state.pointLog.length-1] : null;
+  if (prev) state.serving = prev.team; // approximate
+  renderAll();
+  showAlert('Last point undone', 'warn');
+}
+
+function checkSetWin() {
+  const pts = state.ptsPerSet;
+  const minLead = 2;
+  const aWin = state.scoreA >= pts && state.scoreA - state.scoreB >= minLead;
+  const bWin = state.scoreB >= pts && state.scoreB - state.scoreA >= minLead;
+  if (aWin || bWin) {
+    const winner = aWin ? 'A' : 'B';
+    state.setHistory.push({ set: state.currentSet, a: state.scoreA, b: state.scoreB, winner });
+    if (aWin) state.teamA.setsWon++; else state.teamB.setsWon++;
+    showModal('Set ' + state.currentSet + ' Complete!',
+      (aWin ? state.teamA.name : state.teamB.name) + ' wins the set ' + state.scoreA + '-' + state.scoreB + '.',
+      [{ label: 'Next Set', cls: 'btn-success', fn: newSet },
+       { label: 'End Match', cls: 'btn-warn', fn: endMatch }]);
+
+    if (state.teamA.setsWon >= state.setsToWin || state.teamB.setsWon >= state.setsToWin) {
+      endMatch();
+    }
+  }
+}
+
+function newSet() {
+  if (state.teamA.setsWon >= state.setsToWin || state.teamB.setsWon >= state.setsToWin) {
+    endMatch(); return;
+  }
+  closeModal();
+  openSetConfigModal();
+}
+
+function endMatch() {
+  if (state.matchEnded) {
+    closeModal();
+    switchView('summary');
+    updateSummary();
+    return;
+  }
+  state.matchEnded = true;
+  state.gameStarted = false;
+  if (!state.summaryExported) {
+    exportMatchSummary();
+    reserveNextMatchNumber();
+    state.summaryExported = true;
+  }
+  closeModal();
+  switchView('summary');
+  updateSummary();
+  showAlert('Match summary exported to JSON.', 'success');
+}
+
+// ===================== ROTATION =====================
+function rotateTeamState(team) {
+  const t = getTeamState(team);
+  const first = t.rotation.shift();
+  t.rotation.push(first);
+}
+
+function rotateTeam(team, dir) {
+  const t = getTeamState(team);
+  if (dir === 'fwd') {
+    const first = t.rotation.shift();
+    t.rotation.push(first);
+  } else {
+    const last = t.rotation.pop();
+    t.rotation.unshift(last);
+  }
+  renderRotation(team);
+  checkRotationValidity();
+}
+
+function checkRotationValidity() {
+  document.getElementById('rotation-status').innerHTML = '● Valid <span style="color:var(--text-muted);font-size:10px">(positional check)</span>';
+}
+
+// ===================== TIMEOUT =====================
+function useTimeout(team) {
+  const t = team === 'A' ? state.teamA : state.teamB;
+  if (t.timeouts <= 0) {
+    showAlert((team==='A'?state.teamA.name:state.teamB.name) + ' has no timeouts left!', 'danger');
+    return;
+  }
+  t.timeouts--;
+  t.toUsed++;
+  showAlert('Timeout called for ' + (team==='A'?state.teamA.name:state.teamB.name) + '. Remaining: ' + t.timeouts, 'warn');
+  renderAll();
+}
+
+// ===================== SUBSTITUTION =====================
+function openSubModal(team) {
+  state.currentSubTeam = team;
+  const t = getTeamState(team);
+  const remaining = state.maxSubs - t.subsUsed;
+
+  document.getElementById('sub-modal-title').textContent = 'Substitution — ' + t.name;
+  document.getElementById('sub-modal-info').textContent = remaining + ' substitutions remaining this set.';
+  document.getElementById('sub-validation-msg').textContent = '';
+
+  const sel = document.getElementById('sub-out');
+  sel.innerHTML = '';
+  t.rotation.forEach((jersey, idx) => {
+    const opt = document.createElement('option');
+    opt.value = jersey;
+    opt.textContent = '#' + jersey + ' (Pos ' + (idx+1) + ')';
+    sel.appendChild(opt);
+  });
+
+  if (remaining <= 0) {
+    document.getElementById('sub-modal-info').innerHTML = '<span style="color:var(--danger)">No substitutions remaining!</span>';
+    document.querySelector('#sub-overlay button.btn-success').disabled = true;
+  } else {
+    document.querySelector('#sub-overlay button.btn-success').disabled = false;
+  }
+
+  document.getElementById('sub-overlay').style.display = 'flex';
+}
+
+function closeSubModal() {
+  document.getElementById('sub-overlay').style.display = 'none';
+}
+
+function confirmSub() {
+  const team = state.currentSubTeam;
+  const t = getTeamState(team);
+  const outJersey = parseInt(document.getElementById('sub-out').value);
+  const inJersey = parseInt(document.getElementById('sub-in-jersey').value);
+  const msg = document.getElementById('sub-validation-msg');
+
+  if (!Number.isInteger(inJersey) || inJersey < 0) {
+    msg.innerHTML = '<span style="color:var(--danger)">Invalid jersey number.</span>';
+    return;
+  }
+  if (t.rotation.includes(inJersey)) {
+    msg.innerHTML = '<span style="color:var(--danger)">Player #' + inJersey + ' is already on court.</span>';
+    return;
+  }
+
+  // Check: can't re-enter in same set (simplified FIVB: a player can only return once, replaced by same)
+  const reg = subRegistry[team];
+  if (reg[inJersey] && reg[inJersey] !== outJersey) {
+    msg.innerHTML = '<span style="color:var(--danger)">Invalid: #' + inJersey + ' can only replace #' + (reg[inJersey]||'—') + ' per FIVB rules.</span>';
+    return;
+  }
+  if (reg[outJersey] && reg[outJersey] === inJersey) {
+    // reverse sub - allowed
+  }
+
+  if (t.subsUsed >= state.maxSubs) {
+    msg.innerHTML = '<span style="color:var(--danger)">Substitution limit reached!</span>';
+    return;
+  }
+
+  // Do the sub
+  const idx = t.rotation.indexOf(outJersey);
+  t.rotation[idx] = inJersey;
+  t.subsUsed++;
+  t.totalSubs++;
+  reg[inJersey] = outJersey;
+  reg[outJersey] = inJersey;
+
+  const logEntry = {
+    set: state.currentSet,
+    out: outJersey, in: inJersey,
+    pos: idx + 1,
+    score: state.scoreA + '-' + state.scoreB,
+    valid: true
+  };
+  t.subsLog.push(logEntry);
+  state.allSubsLog.push({ ...logEntry, team, tname: t.name });
+
+  closeSubModal();
+  renderAll();
+  showAlert('Sub: #' + inJersey + ' IN for #' + outJersey + ' (Pos ' + (idx+1) + ')', 'success');
+}
+
+function openSetConfigModal() {
+  document.getElementById('set-config-title').textContent = 'Configure Set ' + (state.currentSet + 1);
+  document.getElementById('next-teamA-title').textContent = state.teamA.name;
+  document.getElementById('next-teamB-title').textContent = state.teamB.name;
+  document.getElementById('next-teamA-libero').value = state.teamA.libero || 0;
+  document.getElementById('next-teamB-libero').value = state.teamB.libero || 0;
+  document.getElementById('next-set-serving').value = state.serving;
+  document.getElementById('set-config-validation-msg').textContent = '';
+
+  ['A', 'B'].forEach(team => {
+    const rotation = getTeamState(team).rotation;
+    rotation.forEach((jersey, idx) => {
+      document.getElementById('n' + team + (idx + 1)).value = jersey;
+    });
+  });
+
+  document.getElementById('set-config-overlay').style.display = 'flex';
+}
+
+function closeSetConfigModal() {
+  document.getElementById('set-config-overlay').style.display = 'none';
+}
+
+function readNextSetLineup(team) {
+  const jerseys = [];
+  for (let i = 1; i <= 6; i++) {
+    const value = parseInt(document.getElementById('n' + team + i).value, 10);
+    if (!Number.isInteger(value) || value < 0) return null;
+    jerseys.push(value);
+  }
+  return jerseys;
+}
+
+function validateUniqueLineup(lineup) {
+  return new Set(lineup).size === lineup.length;
+}
+
+function confirmNextSetSetup() {
+  const msg = document.getElementById('set-config-validation-msg');
+  const nextA = readNextSetLineup('A');
+  const nextB = readNextSetLineup('B');
+  const liberoA = parseInt(document.getElementById('next-teamA-libero').value, 10) || 0;
+  const liberoB = parseInt(document.getElementById('next-teamB-libero').value, 10) || 0;
+
+  if (!nextA || !nextB) {
+    msg.innerHTML = '<span style="color:var(--danger)">Every position must have a valid jersey number.</span>';
+    return;
+  }
+  if (!validateUniqueLineup(nextA) || !validateUniqueLineup(nextB)) {
+    msg.innerHTML = '<span style="color:var(--danger)">Each team lineup must contain 6 unique jersey numbers.</span>';
+    return;
+  }
+
+  state.currentSet++;
+  state.teamA.rotation = [...nextA];
+  state.teamB.rotation = [...nextB];
+  state.teamA.roster = [...nextA];
+  state.teamB.roster = [...nextB];
+  state.teamA.libero = liberoA;
+  state.teamB.libero = liberoB;
+  state.serving = document.getElementById('next-set-serving').value;
+  state.ptsPerSet = getPointsTargetForSet(state.currentSet);
+
+  resetSetState();
+  closeSetConfigModal();
+  renderAll();
+  showAlert('Set ' + state.currentSet + ' lineup configured.', 'success');
+}
+
+// ===================== COURT / TOUCH TRACKING =====================
+function renderCourt() {
+  const svg = document.getElementById('court-players');
+  svg.innerHTML = '';
+  state.lastTouchPlayer = state.lastTouchPlayer || null;
+
+  // Update dynamic team name labels on SVG
+  const lblA = document.getElementById('svg-labelA');
+  const lblB = document.getElementById('svg-labelB');
+  if (lblA) lblA.textContent = (state.teamA.name || 'Team A').toUpperCase();
+  if (lblB) lblB.textContent = (state.teamB.name || 'Team B').toUpperCase();
+
+  const positionsA = getCourtPositions('A');
+  positionsA.forEach(p => drawPlayerOnCourt(svg, p.x, p.y, p.jersey, 'A', p.isLibero));
+
+  const positionsB = getCourtPositions('B');
+  positionsB.forEach(p => drawPlayerOnCourt(svg, p.x, p.y, p.jersey, 'B', p.isLibero));
+}
+
+function getCourtPositions(team) {
+  const t = getTeamState(team);
+  const rot = t.rotation;
+  const orderedPositions = getCourtPositionList(team);
+  return rot.map((jersey, i) => ({
+    x: orderedPositions[i].x, y: orderedPositions[i].y,
+    jersey, isLibero: jersey === t.libero && t.libero > 0,
+    posIdx: i
+  }));
+}
+
+function drawPlayerOnCourt(svg, x, y, jersey, team, isLibero) {
+  const color = team === 'A' ? '#e8a020' : '#2090d8';
+  const liberoColor = '#9060d0';
+  const fill = isLibero ? liberoColor : color;
+  const isSelected = state.lastTouchPlayer === jersey && state.lastTouchTeam === team;
+  const r = 22;
+
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('class', 'player-circle' + (isSelected ? ' selected' : ''));
+  g.style.cursor = 'pointer';
+  g.onclick = () => selectPlayerTouch(jersey, team);
+
+  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circle.setAttribute('cx', x);
+  circle.setAttribute('cy', y);
+  circle.setAttribute('r', r);
+  circle.setAttribute('fill', isSelected ? '#ffffff' : fill);
+  circle.setAttribute('stroke', isSelected ? '#ffff00' : (isLibero ? '#b090f0' : fill));
+  circle.setAttribute('stroke-width', isSelected ? '3' : '1.5');
+  circle.setAttribute('opacity', '0.9');
+
+  const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  text.setAttribute('x', x);
+  text.setAttribute('y', y + 5);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('font-size', '14');
+  text.setAttribute('font-weight', 'bold');
+  text.setAttribute('fill', isSelected ? fill : '#ffffff');
+  text.setAttribute('font-family', 'Courier New');
+  text.textContent = '#' + jersey;
+
+  g.appendChild(circle);
+  g.appendChild(text);
+  svg.appendChild(g);
+}
+
+function selectPlayerTouch(jersey, team) {
+  state.lastTouchPlayer = jersey;
+  state.lastTouchTeam = team;
+  const tName = team === 'A' ? state.teamA.name : state.teamB.name;
+  document.getElementById('last-touch-val').textContent = '#' + jersey;
+  document.getElementById('last-touch-val').style.color = team === 'A' ? 'var(--team-a)' : 'var(--team-b)';
+  document.getElementById('last-touch-team').textContent = tName;
+  document.getElementById('score-confirm-btn').disabled = false;
+  renderCourt();
+}
+
+function clearTouch() {
+  state.lastTouchPlayer = null;
+  state.lastTouchTeam = null;
+  document.getElementById('last-touch-val').textContent = '—';
+  document.getElementById('last-touch-val').style.color = 'var(--text-primary)';
+  document.getElementById('last-touch-team').textContent = 'Tap a player on court';
+  document.getElementById('score-confirm-btn').disabled = true;
+  renderCourt();
+}
+
+function confirmCourtPoint() {
+  if (!state.lastTouchPlayer || !state.lastTouchTeam) return;
+  addPoint(state.lastTouchTeam);
+  clearTouch();
+  updateCourtScores();
+  renderPlayerStats();
+}
+
+function updateCourtScores() {
+  document.getElementById('court-scoreA').textContent = state.scoreA;
+  document.getElementById('court-scoreB').textContent = state.scoreB;
+  document.getElementById('court-set').textContent = state.currentSet;
+  document.getElementById('court-nameA').textContent = state.teamA.name;
+  document.getElementById('court-nameB').textContent = state.teamB.name;
+}
+
+function renderPlayerStats() {
+  const el = document.getElementById('player-stats');
+  const entries = Object.entries(state.playerPoints).sort((a,b) => b[1]-a[1]);
+  if (entries.length === 0) { el.innerHTML = '<div style="color:var(--text-muted)">No points yet</div>'; return; }
+  el.innerHTML = entries.map(([key,pts]) => {
+    const [team, j] = key.split(':');
+    const color = team === 'A' ? 'var(--team-a)' : 'var(--team-b)';
+    return `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)">
+      <span style="color:${color}">#${j} (${team==='A'?state.teamA.name:state.teamB.name})</span>
+      <span style="font-weight:bold">${pts} pts</span>
+    </div>`;
+  }).join('');
+}
+
+// ===================== RENDER =====================
+function renderAll() {
+  // Score
+  document.getElementById('scoreA-big').textContent = state.scoreA;
+  document.getElementById('scoreB-big').textContent = state.scoreB;
+  document.getElementById('setsA').textContent = state.teamA.setsWon;
+  document.getElementById('setsB').textContent = state.teamB.setsWon;
+  document.getElementById('set-display').textContent = state.currentSet;
+  document.getElementById('display-nameA').textContent = state.teamA.name;
+  document.getElementById('display-nameB').textContent = state.teamB.name;
+
+  // Serve indicator
+  const servingTeam = state.serving === 'A' ? state.teamA : state.teamB;
+  const serverJersey = servingTeam.rotation[0];
+  document.getElementById('serve-indicator').textContent = '● Serving: ' + servingTeam.name + ' #' + serverJersey;
+  document.getElementById('serve-indicator').style.color = state.serving === 'A' ? 'var(--team-a)' : 'var(--team-b)';
+  document.getElementById('server-info').textContent = servingTeam.name + ' — #' + serverJersey + ' (Pos 1)';
+
+  // Rotations
+  renderRotation('A');
+  renderRotation('B');
+
+  // Timeouts
+  renderTimeouts('A');
+  renderTimeouts('B');
+
+  // Subs count
+  document.getElementById('subsA-count').textContent = state.teamA.subsUsed;
+  document.getElementById('subsB-count').textContent = state.teamB.subsUsed;
+
+  // Sub logs
+  renderSubLog('A');
+  renderSubLog('B');
+
+  // Point log
+  renderPointLog();
+
+  // Court
+  renderCourt();
+  updateCourtScores();
+  renderPlayerStats();
+}
+
+function renderRotation(team) {
+  const el = document.getElementById('rot'+team);
+  const t = getTeamState(team);
+  const libero = t.libero;
+  const gridLayout = TEAM_LAYOUTS[team].rotationGrid;
+  el.innerHTML = '';
+
+  // Add col headers as first row using CSS grid column span trick via separate divs
+  const hdr1 = document.createElement('div');
+  hdr1.style.cssText = 'font-size:8px;color:var(--text-muted);text-align:center;align-self:end;padding-bottom:2px;letter-spacing:1px;';
+  hdr1.textContent = gridLayout.headers[0];
+  el.appendChild(hdr1);
+  const hdr2 = document.createElement('div');
+  hdr2.style.cssText = 'font-size:8px;color:var(--text-muted);text-align:center;align-self:end;padding-bottom:2px;letter-spacing:1px;';
+  hdr2.textContent = gridLayout.headers[1];
+  el.appendChild(hdr2);
+
+  gridLayout.order.forEach((posKey) => {
+    const posIdx = getPositionIndex(posKey);
+    const jersey = t.rotation[posIdx];
+    const isLib = jersey === libero && libero > 0;
+    const isServing = posIdx === 0 && state.serving === team;
+    const div = document.createElement('div');
+    div.className = 'pos-cell' + (isLib ? ' libero' : '') + (isServing ? ' serving' : '');
+    div.innerHTML = `<span class="pos-num-label">${posIdx+1}</span><span class="pnum">#${jersey}</span>`;
+    if (isServing) {
+      const srv = document.createElement('span');
+      srv.style.cssText = 'font-size:8px;color:var(--warn);position:absolute;bottom:2px;right:3px;';
+      srv.textContent = '●';
+      div.style.position = 'relative';
+      div.appendChild(srv);
+    }
+    el.appendChild(div);
+  });
+
+  // Update grid to include header row
+  el.style.gridTemplateRows = 'auto repeat(3, 1fr)';
+}
+
+function renderTimeouts(team) {
+  const t = team === 'A' ? state.teamA : state.teamB;
+  const el = document.getElementById('to'+team+'-dots');
+  el.innerHTML = '';
+  for (let i = 0; i < 2; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot ' + (i < t.timeouts ? 'available' : 'used-'+team.toLowerCase());
+    el.appendChild(dot);
+  }
+}
+
+function renderSubLog(team) {
+  const t = team === 'A' ? state.teamA : state.teamB;
+  const el = document.getElementById('sublog-'+team);
+  if (t.subsLog.length === 0) { el.innerHTML = '<div style="font-size:10px;color:var(--text-muted)">No subs this set</div>'; return; }
+  el.innerHTML = t.subsLog.map(s =>
+    `<div class="sub-item">${s.score} | #${s.in} IN for #${s.out} (Pos ${s.pos}) <span class="${s.valid?'sub-valid':'sub-invalid'}">${s.valid?'✓ Valid':'✗ Invalid'}</span></div>`
+  ).join('');
+}
+
+function renderPointLog() {
+  const el = document.getElementById('score-log');
+  const recent = [...state.pointLog].reverse().slice(0, 20);
+  el.innerHTML = recent.map((p,i) =>
+    `<div class="log-item">
+      <span class="${p.team==='A'?'log-tag-a':'log-tag-b'}">${p.team==='A'?state.teamA.name:state.teamB.name}</span>
+      <span>${p.scoreA} — ${p.scoreB}</span>
+    </div>`
+  ).join('') || '<div style="color:var(--text-muted);font-size:11px;padding:4px">No points yet</div>';
+}
+
+function getWinnerTeamCode() {
+  if (state.teamA.setsWon >= state.setsToWin) return 'A';
+  if (state.teamB.setsWon >= state.setsToWin) return 'B';
+  return null;
+}
+
+function getTeamLeaderboard(team) {
+  return Object.entries(state.playerPoints)
+    .filter(([key]) => key.startsWith(team + ':'))
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, points]) => {
+      const jersey = parseInt(key.split(':')[1], 10);
+      return { jersey, points };
+    });
+}
+
+function renderLeaderboard(team, elementId) {
+  const el = document.getElementById(elementId);
+  const entries = getTeamLeaderboard(team).slice(0, 6);
+  const teamName = getTeamState(team).name;
+  const color = team === 'A' ? 'var(--team-a)' : 'var(--team-b)';
+  el.innerHTML = entries.map(({ jersey, points }) =>
+    `<div class="stat-row"><span class="stat-label">${teamName} #${jersey}</span><span style="color:${color};font-weight:bold">${points} pts</span></div>`
+  ).join('') || '<div style="color:var(--text-muted);font-size:11px">No stats yet</div>';
+}
+
+function buildMatchSummary() {
+  const winnerCode = getWinnerTeamCode();
+  return {
+    gameNumber: state.matchNumber,
+    setsPlayed: state.setHistory.length,
+    winner: winnerCode ? getTeamState(winnerCode).name : null,
+    firstServer: getTeamState(state.firstServer).name,
+    teams: {
+      A: {
+        name: state.teamA.name,
+        setsWon: state.teamA.setsWon,
+        totalPoints: state.teamA.totalPts,
+        timeoutsUsed: state.teamA.toUsed,
+        substitutionsUsed: state.teamA.totalSubs,
+        leaderboard: getTeamLeaderboard('A')
+      },
+      B: {
+        name: state.teamB.name,
+        setsWon: state.teamB.setsWon,
+        totalPoints: state.teamB.totalPts,
+        timeoutsUsed: state.teamB.toUsed,
+        substitutionsUsed: state.teamB.totalSubs,
+        leaderboard: getTeamLeaderboard('B')
+      }
+    },
+    setHistory: state.setHistory.map(s => ({
+      set: s.set,
+      teamA: s.a,
+      teamB: s.b,
+      winner: getTeamState(s.winner).name
+    })),
+    substitutionLog: state.allSubsLog
+  };
+}
+
+function exportMatchSummary() {
+  const summary = buildMatchSummary();
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const fileName = `volleyref-match-${String(state.matchNumber).padStart(3, '0')}-${stamp}.json`;
+  const blob = new Blob([JSON.stringify(summary, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+// ===================== SUMMARY =====================
+function updateSummary() {
+  document.getElementById('sum-setsA').textContent = state.teamA.setsWon;
+  document.getElementById('sum-setsB').textContent = state.teamB.setsWon;
+  document.getElementById('sum-ptsA').textContent = state.teamA.totalPts;
+  document.getElementById('sum-ptsB').textContent = state.teamB.totalPts;
+  document.getElementById('sum-toA').textContent = state.teamA.toUsed;
+  document.getElementById('sum-toB').textContent = state.teamB.toUsed;
+  document.getElementById('sum-subA').textContent = state.teamA.totalSubs;
+  document.getElementById('sum-subB').textContent = state.teamB.totalSubs;
+  document.getElementById('sum-game-number').textContent = state.matchNumber;
+  document.getElementById('sum-sets-played').textContent = state.setHistory.length;
+  document.getElementById('sum-first-server').textContent = getTeamState(state.firstServer).name;
+
+  // Winner
+  const wb = document.getElementById('winner-banner');
+  const winnerCode = getWinnerTeamCode();
+  if (winnerCode) {
+    wb.style.display = 'block';
+    const winner = getTeamState(winnerCode).name;
+    document.getElementById('winner-name').textContent = winner;
+    document.getElementById('sum-winner').textContent = winner;
+  } else {
+    wb.style.display = 'none';
+    document.getElementById('sum-winner').textContent = '-';
+  }
+
+  // Set history
+  const sh = document.getElementById('set-history-rows');
+  sh.innerHTML = state.setHistory.map(s =>
+    `<div class="set-history-row">
+      <span style="color:var(--text-muted)">Set ${s.set}</span>
+      <span style="color:${s.winner==='A'?'var(--team-a)':'var(--text-secondary)'}">${s.a}</span>
+      <span style="color:${s.winner==='B'?'var(--team-b)':'var(--text-secondary)'}">${s.b}</span>
+    </div>`
+  ).join('') || '<div style="color:var(--text-muted);font-size:11px">No completed sets</div>';
+
+  document.getElementById('leaderboard-title-a').textContent = state.teamA.name;
+  document.getElementById('leaderboard-title-b').textContent = state.teamB.name;
+  renderLeaderboard('A', 'top-scorers-a');
+  renderLeaderboard('B', 'top-scorers-b');
+
+  // Full sub log
+  const fl = document.getElementById('full-sub-log');
+  const allSubs = state.allSubsLog;
+  fl.innerHTML = allSubs.map(s =>
+    `<div style="padding:4px 0;border-bottom:1px solid var(--border)">
+      <span style="color:${s.team==='A'?'var(--team-a)':'var(--team-b)'}">${s.tname}</span>
+      Set ${s.set} | #${s.in} IN for #${s.out} @ ${s.score}
+    </div>`
+  ).join('') || '<div style="color:var(--text-muted)">No substitutions recorded</div>';
+}
+
+// ===================== MODAL =====================
+function showModal(title, body, actions) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent = body;
+  const acts = document.getElementById('modal-actions');
+  acts.innerHTML = '';
+  actions.forEach(a => {
+    const btn = document.createElement('button');
+    btn.className = 'resource-btn ' + a.cls;
+    btn.textContent = a.label;
+    btn.onclick = a.fn;
+    acts.appendChild(btn);
+  });
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+document.getElementById('modal-overlay').onclick = function(e) {
+  if (e.target === this) closeModal();
+};
+
+// ===================== ALERT =====================
+let alertTimer;
+function showAlert(msg, type='warn') {
+  const el = document.getElementById('alert-bar');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.borderColor = type==='success'?'var(--success)':type==='danger'?'var(--danger)':'var(--warn)';
+  el.style.color = type==='success'?'var(--success)':type==='danger'?'var(--danger)':'var(--warn)';
+  clearTimeout(alertTimer);
+  alertTimer = setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+// ===================== NAVIGATION =====================
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    if (t.textContent.toLowerCase().includes(name)) t.classList.add('active');
+  });
+  if (name === 'summary') updateSummary();
+  if (name === 'court') { renderCourt(); updateCourtScores(); renderPlayerStats(); }
+}
+
+// ===================== RESET =====================
+function resetAll() {
+  showModal('Reset Match', 'This will clear all match data. Are you sure?',
+    [{ label: 'Cancel', cls: 'btn-neutral', fn: closeModal },
+     { label: 'Reset', cls: 'btn-danger', fn: () => {
+       state = {
+         teamA: { name: state.teamA.name, roster: state.teamA.roster, libero: state.teamA.libero,
+           rotation: [...state.teamA.roster], timeouts: 2, subsUsed: 0, subsLog: [],
+           totalPts: 0, setsWon: 0, toUsed: 0, totalSubs: 0 },
+         teamB: { name: state.teamB.name, roster: state.teamB.roster, libero: state.teamB.libero,
+           rotation: [...state.teamB.roster], timeouts: 2, subsUsed: 0, subsLog: [],
+           totalPts: 0, setsWon: 0, toUsed: 0, totalSubs: 0 },
+         scoreA: 0, scoreB: 0, currentSet: 1, matchNumber: getNextMatchNumber(), serving: state.firstServer,
+         firstServer: state.firstServer,
+         setHistory: [], allSubsLog: [], pointLog: [], playerPoints: {},
+         maxSubs: state.maxSubs, setsToWin: state.setsToWin, ptsPerSet: getPointsTargetForSet(1),
+         gameStarted: true, matchEnded: false, summaryExported: false,
+         currentSubTeam: null, lastTouchPlayer: null, lastTouchTeam: null
+       };
+       subRegistry = { A: {}, B: {} };
+       closeModal();
+       renderAll();
+       showAlert('Match reset!', 'warn');
+     }}
+  ]);
+}
+
+// ===================== INIT =====================
+initSetupUI();
+</script>
+</body>
+</html>
