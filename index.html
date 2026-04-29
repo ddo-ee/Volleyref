@@ -1,30 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VolleyRef">
+<meta name="theme-color" content="#0d1f17">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VolleyRef — Second Referee System</title>
 <style>
   :root {
-    --court-green: #1a3a2a;
-    --court-line: #f0e8d0;
-    --court-surface: #1f4433;
-    --team-a: #e8a020;
-    --team-b: #2090d8;
+    --court-green: #ff9900;
+    --court-line: #ffffff;
+    --court-surface: #1801eb2d;
+    --team-a: #00c2fd;
+    --team-b: #00cfad;
     --team-a-dark: #b07010;
     --team-b-dark: #1060a8;
-    --bg-dark: #0d1f17;
-    --bg-panel: #142a1e;
-    --bg-card: #1a3a28;
+    --bg-dark: #0f0d1f;
+    --bg-panel: #14182a;
+    --bg-card: #1a253a;
     --text-primary: #f0ede6;
     --text-secondary: #9ab09a;
-    --text-muted: #6a8a6a;
-    --border: #2a5a3a;
+    --text-muted: #10b1a9;
+    --border: #1b325e;
     --danger: #e04040;
-    --success: #40c070;
+    --success: #00bb19;
     --warn: #e0a020;
-    --font-main: 'Courier New', monospace;
-    --font-display: Georgia, serif;
+    --font-main: 'Courier New', Helvetica;
+    --font-display: Georgia, bold;
+    --active-color: #ffe600;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -42,6 +47,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -52,8 +59,8 @@
     letter-spacing: 2px;
     color: var(--court-line);
   }
-  #topbar .logo span { color: var(--team-a); }
-  #nav-tabs { display: flex; gap: 4px; }
+  #topbar .logo span { color: var(--team-a-dark); }
+  #nav-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
   .nav-tab {
     padding: 6px 14px;
     border: 1px solid var(--border);
@@ -66,7 +73,7 @@
     text-transform: uppercase;
     transition: all 0.15s;
   }
-  .nav-tab.active { background: var(--court-surface); color: var(--court-line); border-color: var(--court-line); }
+  .nav-tab.active { background: var(--court-surface); color: var(--court-line); border-color: var(--active-color); }
   .nav-tab:hover:not(.active) { color: var(--text-primary); border-color: var(--text-muted); }
 
   /* ===================== VIEWS ===================== */
@@ -126,9 +133,9 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(3, 1fr);
-    gap: 4px;
+    gap: 5px;
     aspect-ratio: 2/3;
-    max-height: 160px;
+    max-height: 180px;
   }
   .pos-cell {
     background: var(--court-surface);
@@ -146,7 +153,7 @@
   }
   .pos-cell:hover { border-color: var(--court-line); }
   .pos-cell.libero { background: #1a2a4a; border-color: #3a5a8a; color: #6ab0e0; }
-  .pos-cell.serving { background: #3a2a0a; border-color: var(--warn); }
+  .pos-cell.serving { background: #0446d469; border-color: #00bb19; }
   .pos-cell .pnum { font-size: 16px; }
   .pos-cell .plabel { font-size: 9px; color: var(--text-muted); letter-spacing: 1px; }
   .pos-num-label {
@@ -208,6 +215,51 @@
     letter-spacing: 2px;
     transition: all 0.15s;
     display: inline-block;
+  }
+  .setup-header,
+  .summary-header {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .match-rules-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .game-score-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .summary-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .summary-meta-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .leaderboard-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .leaderboard-team-title {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
   }
 
   /* ===================== SUB LOG ===================== */
@@ -399,13 +451,33 @@
   #modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
   /* ===================== RESPONSIVE ===================== */
+  @media (max-width: 1024px) {
+    .match-rules-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #court-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
   @media (max-width: 700px) {
     #main-grid { grid-template-columns: 1fr; }
     .setup-grid { grid-template-columns: 1fr; }
     .summary-grid { grid-template-columns: 1fr; }
     #score-header { grid-template-columns: 1fr; }
     #court-outer { flex-direction: column; }
-    #court-controls { width: 100%; }
+    #court-controls { width: 100%; grid-template-columns: 1fr; }
+    .game-score-actions { grid-template-columns: 1fr; }
+    .match-rules-grid { grid-template-columns: 1fr; }
+    .leaderboard-split { grid-template-columns: 1fr; }
+    .summary-meta { grid-template-columns: 1fr; }
+    .team-score-big { font-size: 40px; }
+    .rotation-grid { max-height: none; }
+    .view { padding: 12px; }
+    .btn-big { width: 100%; text-align: center; }
+  }
+  @media (max-width: 560px) {
+    .players-setup { grid-template-columns: repeat(3, 1fr); }
+    #topbar { padding: 10px 12px; }
+    .nav-tab { flex: 1 1 calc(50% - 4px); text-align: center; }
+    .team-name-val { font-size: 16px; }
+    #set-display { font-size: 24px; }
+    #alert-bar { min-width: 0; width: calc(100% - 24px); }
   }
 
   /* Scrollbar */
@@ -430,7 +502,7 @@
 <!-- ===================== SETUP VIEW ===================== -->
 <div id="view-setup" class="view active">
   <div style="max-width:800px;margin:0 auto">
-    <div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+    <div class="setup-header">
       <div>
         <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Match Setup</div>
         <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Configure Teams & Roster</div>
@@ -440,7 +512,7 @@
 
     <div style="background:var(--bg-card);border:1px solid var(--border);padding:14px;margin-bottom:16px">
       <div class="panel-title">Match Rules</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div class="match-rules-grid">
         <div class="field-row">
           <label>Sets to Win</label>
           <select id="sets-to-win">
@@ -450,17 +522,22 @@
         </div>
         <div class="field-row">
           <label>Points per Set</label>
-          <select id="pts-per-set">
-            <option value="25">25 (standard)</option>
-            <option value="21">21</option>
-            <option value="15">15 (5th set)</option>
-          </select>
+          <div id="pts-per-set-info" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:6px 8px;font-family:var(--font-main);font-size:13px">
+            Sets 1-4: 25 points, deciding set: 15 points
+          </div>
         </div>
         <div class="field-row">
           <label>Max Substitutions</label>
           <select id="max-subs">
             <option value="6">6 per set</option>
             <option value="12">12 per set (FIVB 2024)</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label>First Server</label>
+          <select id="first-server">
+            <option value="A">Team A serves first</option>
+            <option value="B">Team B serves first</option>
           </select>
         </div>
       </div>
@@ -695,7 +772,7 @@
 
 <!-- ===================== SUMMARY VIEW ===================== -->
 <div id="view-summary" class="view">
-  <div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+  <div class="summary-header">
     <div>
       <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Match Summary</div>
       <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Statistics & Overview</div>
@@ -708,6 +785,16 @@
     <div style="font-size:32px;font-family:var(--font-display);color:var(--warn)" id="winner-name">—</div>
   </div>
 
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-title">Match Overview</div>
+    <div class="summary-meta">
+      <div class="summary-meta-item"><span class="stat-label">Game Number</span><span id="sum-game-number">1</span></div>
+      <div class="summary-meta-item"><span class="stat-label">Sets Played</span><span id="sum-sets-played">0</span></div>
+      <div class="summary-meta-item"><span class="stat-label">Winner</span><span id="sum-winner">-</span></div>
+      <div class="summary-meta-item"><span class="stat-label">First Server</span><span id="sum-first-server">-</span></div>
+    </div>
+  </div>
+
   <div class="summary-grid">
     <div class="panel">
       <div class="panel-title">Match Stats</div>
@@ -717,8 +804,17 @@
       <div class="stat-row"><span class="stat-label">Substitutions</span><span class="stat-val-a" id="sum-subA">0</span><span style="color:var(--text-muted)">/</span><span class="stat-val-b" id="sum-subB">0</span></div>
     </div>
     <div class="panel">
-      <div class="panel-title">Top Scorers</div>
-      <div id="top-scorers"></div>
+      <div class="panel-title">Leaderboard</div>
+      <div class="leaderboard-split">
+        <div>
+          <div class="leaderboard-team-title" style="color:var(--team-a)" id="leaderboard-title-a">Team A</div>
+          <div id="top-scorers-a"></div>
+        </div>
+        <div>
+          <div class="leaderboard-team-title" style="color:var(--team-b)" id="leaderboard-title-b">Team B</div>
+          <div id="top-scorers-b"></div>
+        </div>
+      </div>
     </div>
     <div class="panel">
       <div class="panel-title">Set History</div>
@@ -769,42 +865,194 @@
   </div>
 </div>
 
+<!-- NEXT SET MODAL -->
+<div id="set-config-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:610;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--bg-panel);border:1px solid var(--border);padding:20px;max-width:920px;width:100%;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Set Configuration</div>
+        <div style="font-family:var(--font-display);font-size:20px;color:var(--court-line)" id="set-config-title">Configure Next Set</div>
+      </div>
+      <button class="resource-btn btn-neutral" onclick="closeSetConfigModal()">Close</button>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border);padding:12px;margin-bottom:16px">
+      <div class="match-rules-grid">
+        <div class="field-row">
+          <label>Serving First This Set</label>
+          <select id="next-set-serving">
+            <option value="A">Team A serves first</option>
+            <option value="B">Team B serves first</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label>Team A Libero</label>
+          <input id="next-teamA-libero" type="number" value="0" placeholder="0 = none"/>
+        </div>
+        <div class="field-row">
+          <label>Team B Libero</label>
+          <input id="next-teamB-libero" type="number" value="0" placeholder="0 = none"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-grid">
+      <div class="setup-panel">
+        <h3 class="team-a-h" id="next-teamA-title">Team A</h3>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:10px;margin-bottom:4px">Set Lineup (Pos 1–6)</div>
+        <div class="players-setup" id="next-teamA-players"></div>
+      </div>
+      <div class="setup-panel">
+        <h3 class="team-b-h" id="next-teamB-title">Team B</h3>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:10px;margin-bottom:4px">Set Lineup (Pos 1–6)</div>
+        <div class="players-setup" id="next-teamB-players"></div>
+      </div>
+    </div>
+
+    <div id="set-config-validation-msg" style="font-size:11px;margin-top:12px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px">
+      <button class="resource-btn btn-neutral" onclick="closeSetConfigModal()">Cancel</button>
+      <button class="resource-btn btn-success" onclick="confirmNextSetSetup()">Start Next Set</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ===================== STATE =====================
 let state = {
   teamA: { name: 'Team A', roster: [1,2,3,4,5,6], libero: 0,
     rotation: [1,2,3,4,5,6], timeouts: 2, subsUsed: 0, subsLog: [],
-    totalPts: 0, setsWon: 0, toUsed: 0 },
+    totalPts: 0, setsWon: 0, toUsed: 0, totalSubs: 0 },
   teamB: { name: 'Team B', roster: [1,2,3,4,5,6], libero: 0,
     rotation: [1,2,3,4,5,6], timeouts: 2, subsUsed: 0, subsLog: [],
-    totalPts: 0, setsWon: 0, toUsed: 0 },
+    totalPts: 0, setsWon: 0, toUsed: 0, totalSubs: 0 },
   scoreA: 0, scoreB: 0,
   currentSet: 1,
+  matchNumber: 1,
   serving: 'A',
+  firstServer: 'A',
   setHistory: [],
+  allSubsLog: [],
   pointLog: [],
-  playerPoints: {}, // jersey# -> points
+  playerPoints: {}, // "A:12" -> points
   maxSubs: 6,
   setsToWin: 3,
   ptsPerSet: 25,
   gameStarted: false,
+  matchEnded: false,
+  summaryExported: false,
   currentSubTeam: null,
   lastTouchPlayer: null,
   lastTouchTeam: null,
 };
 
+const TEAM_LAYOUTS = {
+  A: {
+    courtPositions: {
+      pos1: { x: 55,  y: 220 },
+      pos2: { x: 245, y: 220 },
+      pos3: { x: 245, y: 140 },
+      pos4: { x: 245, y: 60  },
+      pos5: { x: 55,  y: 60  },
+      pos6: { x: 55,  y: 140 }
+    },
+    rotationGrid: {
+      headers: ['Back ◀', '▶ Net'],
+      order: ['pos5', 'pos4', 'pos6', 'pos3', 'pos1', 'pos2']
+    }
+  },
+  B: {
+    courtPositions: {
+      pos1: { x: 480, y: 60  },
+      pos2: { x: 315, y: 60  },
+      pos3: { x: 315, y: 140 },
+      pos4: { x: 315, y: 220 },
+      pos5: { x: 480, y: 220 },
+      pos6: { x: 480, y: 140 }
+    },
+    rotationGrid: {
+      headers: ['◀ Net','Back ▶'],
+      order: ['pos2', 'pos1', 'pos3', 'pos6', 'pos4', 'pos5']
+    }
+  }
+};
+
 // Sub tracking: jerseys that have been sub'd in/out per team per set
 let subRegistry = { A: {}, B: {} };
+const MATCH_NUMBER_KEY = 'volleyref-next-match-number';
+
+function getTeamState(team) {
+  return team === 'A' ? state.teamA : state.teamB;
+}
+
+function getNextMatchNumber() {
+  const stored = parseInt(localStorage.getItem(MATCH_NUMBER_KEY), 10);
+  return Number.isFinite(stored) && stored > 0 ? stored : 1;
+}
+
+function reserveNextMatchNumber() {
+  localStorage.setItem(MATCH_NUMBER_KEY, String(state.matchNumber + 1));
+}
+
+function getPointsTargetForSet(setNumber) {
+  const decidingSet = state.setsToWin === 2 ? 3 : 5;
+  return setNumber === decidingSet ? 15 : 25;
+}
+
+function updatePointsPerSetInfo() {
+  const el = document.getElementById('pts-per-set-info');
+  if (!el) return;
+  el.textContent = state.setsToWin === 2
+    ? 'Sets 1-2: 25 points, Set 3: 15 points'
+    : 'Sets 1-4: 25 points, Set 5: 15 points';
+}
+
+function getPositionIndex(posKey) {
+  return parseInt(posKey.replace('pos', ''), 10) - 1;
+}
+
+function getCourtPositionList(team) {
+  const layout = TEAM_LAYOUTS[team].courtPositions;
+  return [
+    layout.pos1,
+    layout.pos2,
+    layout.pos3,
+    layout.pos4,
+    layout.pos5,
+    layout.pos6
+  ];
+}
 
 // ===================== SETUP =====================
 function initSetupUI() {
+  const setsToWinEl = document.getElementById('sets-to-win');
+  if (setsToWinEl) {
+    setsToWinEl.onchange = () => {
+      state.setsToWin = parseInt(setsToWinEl.value, 10) || 3;
+      updatePointsPerSetInfo();
+    };
+  }
+  state.setsToWin = parseInt(document.getElementById('sets-to-win').value, 10) || 3;
+  updatePointsPerSetInfo();
+
   ['A','B'].forEach(t => {
     const el = document.getElementById('team'+t+'-players');
     el.innerHTML = '';
     for (let i = 1; i <= 6; i++) {
       const div = document.createElement('div');
       div.innerHTML = `<div class="player-num-label">Pos ${i}</div>
-        <input class="player-num-input" type="number" id="p${t}${i}" value="${i}" min="1" max="99"/>`;
+        <input class="player-num-input" type="number" id="p${t}${i}" value="${i}" min="0" step="1"/>`;
+      el.appendChild(div);
+    }
+  });
+
+  ['A', 'B'].forEach(t => {
+    const el = document.getElementById('next-team' + t + '-players');
+    el.innerHTML = '';
+    for (let i = 1; i <= 6; i++) {
+      const div = document.createElement('div');
+      div.innerHTML = `<div class="player-num-label">Pos ${i}</div>
+        <input class="player-num-input" type="number" id="n${t}${i}" value="${i}" min="0" step="1"/>`;
       el.appendChild(div);
     }
   });
@@ -817,8 +1065,10 @@ function startGame() {
   state.teamA.libero = parseInt(document.getElementById('teamA-libero').value) || 0;
   state.teamB.libero = parseInt(document.getElementById('teamB-libero').value) || 0;
   state.setsToWin = parseInt(document.getElementById('sets-to-win').value);
-  state.ptsPerSet = parseInt(document.getElementById('pts-per-set').value);
+  state.ptsPerSet = getPointsTargetForSet(1);
   state.maxSubs = parseInt(document.getElementById('max-subs').value);
+  state.firstServer = document.getElementById('first-server').value;
+  state.matchNumber = getNextMatchNumber();
 
   let rA = [], rB = [];
   for (let i = 1; i <= 6; i++) {
@@ -829,6 +1079,21 @@ function startGame() {
   state.teamB.roster = [...rB];
   state.teamA.rotation = [...rA];
   state.teamB.rotation = [...rB];
+  state.teamA.totalPts = 0;
+  state.teamB.totalPts = 0;
+  state.teamA.setsWon = 0;
+  state.teamB.setsWon = 0;
+  state.teamA.toUsed = 0;
+  state.teamB.toUsed = 0;
+  state.teamA.totalSubs = 0;
+  state.teamB.totalSubs = 0;
+  state.setHistory = [];
+  state.allSubsLog = [];
+  state.playerPoints = {};
+  state.serving = state.firstServer;
+  state.currentSet = 1;
+  state.matchEnded = false;
+  state.summaryExported = false;
 
   state.gameStarted = true;
   resetSetState();
@@ -845,8 +1110,6 @@ function resetSetState() {
   state.teamA.subsLog = []; state.teamB.subsLog = [];
   state.pointLog = [];
   subRegistry = { A: {}, B: {} };
-  // Reset player points tracking
-  state.playerPoints = {};
 }
 
 function addPoint(team) {
@@ -855,11 +1118,11 @@ function addPoint(team) {
     state.scoreA++;
     state.teamA.totalPts++;
     // Track server point
-    if (state.lastTouchPlayer && state.lastTouchTeam === 'A') trackPlayerPoint(state.lastTouchPlayer);
+    if (state.lastTouchPlayer && state.lastTouchTeam === 'A') trackPlayerPoint('A', state.lastTouchPlayer);
   } else {
     state.scoreB++;
     state.teamB.totalPts++;
-    if (state.lastTouchPlayer && state.lastTouchTeam === 'B') trackPlayerPoint(state.lastTouchPlayer);
+    if (state.lastTouchPlayer && state.lastTouchTeam === 'B') trackPlayerPoint('B', state.lastTouchPlayer);
   }
 
   let wasServing = state.serving;
@@ -876,8 +1139,9 @@ function addPoint(team) {
   renderAll();
 }
 
-function trackPlayerPoint(jersey) {
-  state.playerPoints[jersey] = (state.playerPoints[jersey] || 0) + 1;
+function trackPlayerPoint(team, jersey) {
+  const key = team + ':' + jersey;
+  state.playerPoints[key] = (state.playerPoints[key] || 0) + 1;
 }
 
 function undoLastPoint() {
@@ -915,41 +1179,42 @@ function checkSetWin() {
 }
 
 function newSet() {
-  closeModal();
   if (state.teamA.setsWon >= state.setsToWin || state.teamB.setsWon >= state.setsToWin) {
     endMatch(); return;
   }
-  state.currentSet++;
-  resetSetState();
-  // Rotate rotations for new set
-  rotateTeamState('A');
-  rotateTeamState('B');
-  renderAll();
-  showAlert('Set ' + state.currentSet + ' started!', 'success');
+  closeModal();
+  openSetConfigModal();
 }
 
 function endMatch() {
+  if (state.matchEnded) {
+    closeModal();
+    switchView('summary');
+    updateSummary();
+    return;
+  }
+  state.matchEnded = true;
+  state.gameStarted = false;
+  if (!state.summaryExported) {
+    exportMatchSummary();
+    reserveNextMatchNumber();
+    state.summaryExported = true;
+  }
   closeModal();
   switchView('summary');
   updateSummary();
+  showAlert('Match summary exported to JSON.', 'success');
 }
 
 // ===================== ROTATION =====================
 function rotateTeamState(team) {
-  const t = team === 'A' ? state.teamA : state.teamB;
-  // Clockwise rotation: for Team A (serving from bottom), pos 2→1, shift front to back.
-  // For Team B (serving from top, mirrored), clockwise means the LAST position wraps to front.
-  if (team === 'A') {
-    const first = t.rotation.shift();
-    t.rotation.push(first);
-  } else {
-    const last = t.rotation.pop();
-    t.rotation.unshift(last);
-  }
+  const t = getTeamState(team);
+  const first = t.rotation.shift();
+  t.rotation.push(first);
 }
 
 function rotateTeam(team, dir) {
-  const t = team === 'A' ? state.teamA : state.teamB;
+  const t = getTeamState(team);
   if (dir === 'fwd') {
     const first = t.rotation.shift();
     t.rotation.push(first);
@@ -981,7 +1246,7 @@ function useTimeout(team) {
 // ===================== SUBSTITUTION =====================
 function openSubModal(team) {
   state.currentSubTeam = team;
-  const t = team === 'A' ? state.teamA : state.teamB;
+  const t = getTeamState(team);
   const remaining = state.maxSubs - t.subsUsed;
 
   document.getElementById('sub-modal-title').textContent = 'Substitution — ' + t.name;
@@ -1013,12 +1278,12 @@ function closeSubModal() {
 
 function confirmSub() {
   const team = state.currentSubTeam;
-  const t = team === 'A' ? state.teamA : state.teamB;
+  const t = getTeamState(team);
   const outJersey = parseInt(document.getElementById('sub-out').value);
   const inJersey = parseInt(document.getElementById('sub-in-jersey').value);
   const msg = document.getElementById('sub-validation-msg');
 
-  if (!inJersey || inJersey < 1 || inJersey > 99) {
+  if (!Number.isInteger(inJersey) || inJersey < 0) {
     msg.innerHTML = '<span style="color:var(--danger)">Invalid jersey number.</span>';
     return;
   }
@@ -1046,6 +1311,7 @@ function confirmSub() {
   const idx = t.rotation.indexOf(outJersey);
   t.rotation[idx] = inJersey;
   t.subsUsed++;
+  t.totalSubs++;
   reg[inJersey] = outJersey;
   reg[outJersey] = inJersey;
 
@@ -1057,10 +1323,80 @@ function confirmSub() {
     valid: true
   };
   t.subsLog.push(logEntry);
+  state.allSubsLog.push({ ...logEntry, team, tname: t.name });
 
   closeSubModal();
   renderAll();
   showAlert('Sub: #' + inJersey + ' IN for #' + outJersey + ' (Pos ' + (idx+1) + ')', 'success');
+}
+
+function openSetConfigModal() {
+  document.getElementById('set-config-title').textContent = 'Configure Set ' + (state.currentSet + 1);
+  document.getElementById('next-teamA-title').textContent = state.teamA.name;
+  document.getElementById('next-teamB-title').textContent = state.teamB.name;
+  document.getElementById('next-teamA-libero').value = state.teamA.libero || 0;
+  document.getElementById('next-teamB-libero').value = state.teamB.libero || 0;
+  document.getElementById('next-set-serving').value = state.serving;
+  document.getElementById('set-config-validation-msg').textContent = '';
+
+  ['A', 'B'].forEach(team => {
+    const rotation = getTeamState(team).rotation;
+    rotation.forEach((jersey, idx) => {
+      document.getElementById('n' + team + (idx + 1)).value = jersey;
+    });
+  });
+
+  document.getElementById('set-config-overlay').style.display = 'flex';
+}
+
+function closeSetConfigModal() {
+  document.getElementById('set-config-overlay').style.display = 'none';
+}
+
+function readNextSetLineup(team) {
+  const jerseys = [];
+  for (let i = 1; i <= 6; i++) {
+    const value = parseInt(document.getElementById('n' + team + i).value, 10);
+    if (!Number.isInteger(value) || value < 0) return null;
+    jerseys.push(value);
+  }
+  return jerseys;
+}
+
+function validateUniqueLineup(lineup) {
+  return new Set(lineup).size === lineup.length;
+}
+
+function confirmNextSetSetup() {
+  const msg = document.getElementById('set-config-validation-msg');
+  const nextA = readNextSetLineup('A');
+  const nextB = readNextSetLineup('B');
+  const liberoA = parseInt(document.getElementById('next-teamA-libero').value, 10) || 0;
+  const liberoB = parseInt(document.getElementById('next-teamB-libero').value, 10) || 0;
+
+  if (!nextA || !nextB) {
+    msg.innerHTML = '<span style="color:var(--danger)">Every position must have a valid jersey number.</span>';
+    return;
+  }
+  if (!validateUniqueLineup(nextA) || !validateUniqueLineup(nextB)) {
+    msg.innerHTML = '<span style="color:var(--danger)">Each team lineup must contain 6 unique jersey numbers.</span>';
+    return;
+  }
+
+  state.currentSet++;
+  state.teamA.rotation = [...nextA];
+  state.teamB.rotation = [...nextB];
+  state.teamA.roster = [...nextA];
+  state.teamB.roster = [...nextB];
+  state.teamA.libero = liberoA;
+  state.teamB.libero = liberoB;
+  state.serving = document.getElementById('next-set-serving').value;
+  state.ptsPerSet = getPointsTargetForSet(state.currentSet);
+
+  resetSetState();
+  closeSetConfigModal();
+  renderAll();
+  showAlert('Set ' + state.currentSet + ' lineup configured.', 'success');
 }
 
 // ===================== COURT / TOUCH TRACKING =====================
@@ -1083,64 +1419,12 @@ function renderCourt() {
 }
 
 function getCourtPositions(team) {
-  const rot = team === 'A' ? state.teamA.rotation : state.teamB.rotation;
-  const libero = team === 'A' ? state.teamA.libero : state.teamB.libero;
-
-  // Referee POV: court is horizontal, net is vertical center.
-  // Team A = LEFT half (x: 20–280), Team B = RIGHT half (x: 280–540)
-  // Screen y: top=220 (far sideline), bottom=60 (near/referee sideline)
-  //
-  // FIVB standard positions (referee side = bottom of screen):
-  // Team A (left side):
-  //   Pos 1 = back-right  → near net (x right of A), referee side (y bottom)
-  //   Pos 2 = front-right → near net (x right of A), referee side (y bottom)  -- actually front row
-  //   Pos 6 = back-center, Pos 5 = back-left, Pos 4 = front-left, Pos 3 = front-center
-  //
-  // Layout for Team A positions 1-6 (index 0-5 in rotation array):
-  //   x: back=~80, mid=~140, front(net-side)=~245
-  //   y: referee-side=~220, center=~140, far-side=~60
-  //
-  //   Pos1(idx0): back row, referee side  → x=245, y=220
-  //   Pos2(idx1): front row, referee side → x=245, y=220  ← actually front means closer to net
-  //
-  // CORRECT FIVB layout from referee's sideline:
-  //   Team A left half — referee stands at bottom (y=260 side)
-  //     Front row (near net, x≈240): Pos4(left/far), Pos3(center), Pos2(right/near-ref)
-  //     Back row (far from net, x≈60): Pos5(left/far), Pos6(center), Pos1(right/near-ref)
-  //   Team B right half — mirrored:
-  //     Front row (near net, x≈320): Pos3(left/near-ref), Pos2(center -- wait, mirrored)
-  //     Pos1 for B is back-left of B's side = far from net, far sideline
-
-  // Team A positions [pos1..pos6] = rotation indices [0..5]
-  // Court is horizontal, net at x=280. Team A = left half (x: 55 back, 150 mid-x unused, 245 front/net)
-  // y: referee side = y~220, center = y~140, far sideline = y~60
-  // FIVB: Pos1=back-right(ref side), Pos2=front-right(ref side), Pos3=front-center, Pos4=front-left(far), Pos5=back-left(far), Pos6=back-center
-  //   Pos1(idx0): back,  ref-side  → x=55,  y=220
-  //   Pos2(idx1): front, ref-side  → x=245, y=220
-  //   Pos3(idx2): front, center    → x=245, y=140
-  //   Pos4(idx3): front, far-side  → x=245, y=60
-  //   Pos5(idx4): back,  far-side  → x=55,  y=60
-  //   Pos6(idx5): back,  center    → x=55,  y=140
-  const aX = [ 55, 245, 245, 245,  55,  55];
-  const aY = [220, 220, 140,  60,  60, 140];
-
-  // Team B positions — mirror of A on right half (x: 315 back/far-from-net, 480 front/near-net)
-  // Pos1=back-left(far side), Pos2=front-left(far side), Pos3=front-center, Pos4=front-right(ref), Pos5=back-right(ref), Pos6=back-center
-  //   Pos1(idx0): back,  far-side  → x=315, y=60
-  //   Pos2(idx1): front, far-side  → x=480, y=60
-  //   Pos3(idx2): front, center    → x=480, y=140
-  //   Pos4(idx3): front, ref-side  → x=480, y=220
-  //   Pos5(idx4): back,  ref-side  → x=315, y=220
-  //   Pos6(idx5): back,  center    → x=315, y=140
-  const bX = [315, 480, 480, 480, 315, 315];
-  const bY = [ 60,  60, 140, 220, 220, 140];
-
-  const xArr = team === 'A' ? aX : bX;
-  const yArr = team === 'A' ? aY : bY;
-
+  const t = getTeamState(team);
+  const rot = t.rotation;
+  const orderedPositions = getCourtPositionList(team);
   return rot.map((jersey, i) => ({
-    x: xArr[i], y: yArr[i],
-    jersey, isLibero: jersey === libero && libero > 0,
+    x: orderedPositions[i].x, y: orderedPositions[i].y,
+    jersey, isLibero: jersey === t.libero && t.libero > 0,
     posIdx: i
   }));
 }
@@ -1204,7 +1488,6 @@ function clearTouch() {
 
 function confirmCourtPoint() {
   if (!state.lastTouchPlayer || !state.lastTouchTeam) return;
-  trackPlayerPoint(state.lastTouchPlayer);
   addPoint(state.lastTouchTeam);
   clearTouch();
   updateCourtScores();
@@ -1223,9 +1506,8 @@ function renderPlayerStats() {
   const el = document.getElementById('player-stats');
   const entries = Object.entries(state.playerPoints).sort((a,b) => b[1]-a[1]);
   if (entries.length === 0) { el.innerHTML = '<div style="color:var(--text-muted)">No points yet</div>'; return; }
-  el.innerHTML = entries.map(([j,pts]) => {
-    const team = state.teamA.rotation.includes(parseInt(j)) ? 'A' :
-                 state.teamB.rotation.includes(parseInt(j)) ? 'B' : '?';
+  el.innerHTML = entries.map(([key,pts]) => {
+    const [team, j] = key.split(':');
     const color = team === 'A' ? 'var(--team-a)' : 'var(--team-b)';
     return `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)">
       <span style="color:${color}">#${j} (${team==='A'?state.teamA.name:state.teamB.name})</span>
@@ -1244,10 +1526,6 @@ function renderAll() {
   document.getElementById('set-display').textContent = state.currentSet;
   document.getElementById('display-nameA').textContent = state.teamA.name;
   document.getElementById('display-nameB').textContent = state.teamB.name;
-  const cnA = document.getElementById('combined-nameA');
-  const cnB = document.getElementById('combined-nameB');
-  if (cnA) cnA.textContent = state.teamA.name;
-  if (cnB) cnB.textContent = state.teamB.name;
 
   // Serve indicator
   const servingTeam = state.serving === 'A' ? state.teamA : state.teamB;
@@ -1283,53 +1561,28 @@ function renderAll() {
 
 function renderRotation(team) {
   const el = document.getElementById('rot'+team);
-  const t = team === 'A' ? state.teamA : state.teamB;
+  const t = getTeamState(team);
   const libero = t.libero;
+  const gridLayout = TEAM_LAYOUTS[team].rotationGrid;
   el.innerHTML = '';
-
-  // Referee POV: 2 columns, 3 rows (Far sideline top → Ref sideline bottom)
-  // Grid fills row-major: [row0col0, row0col1, row1col0, row1col1, row2col0, row2col1]
-  // Col 0 = LEFT column, Col 1 = RIGHT column
-  //
-  // Team A (left side): Col0=Back(far from net), Col1=Front(near net)
-  //   row0(far): Pos5(back-far), Pos4(front-far)
-  //   row1(mid): Pos6(back-mid), Pos3(front-mid)
-  //   row2(ref): Pos1(back-ref), Pos2(front-ref)
-  //   indices:    [4,             3,             5,             2,             0,             1]
-  //
-  // Team B (right side): Col0=Front(near net, left of B), Col1=Back(far from net, right of B)
-  //   row0(far): Pos2(front-far), Pos1(back-far)
-  //   row1(mid): Pos3(front-mid), Pos6(back-mid)
-  //   row2(ref): Pos4(front-ref), Pos5(back-ref)
-  //   indices:    [1,              0,             2,              5,             3,              4]
-
-  const orderA = [4, 3, 5, 2, 0, 1];
-  const orderB = [1, 0, 2, 5, 3, 4];
-  const order = team === 'A' ? orderA : orderB;
-
-  // Column headers (col0 left, col1 right)
-  const colHeaderA = ['Back ◀', '▶ Net'];
-  const colHeaderB = ['Net ◀', '▶ Back'];
-  const headers = team === 'A' ? colHeaderA : colHeaderB;
 
   // Add col headers as first row using CSS grid column span trick via separate divs
   const hdr1 = document.createElement('div');
   hdr1.style.cssText = 'font-size:8px;color:var(--text-muted);text-align:center;align-self:end;padding-bottom:2px;letter-spacing:1px;';
-  hdr1.textContent = headers[0];
+  hdr1.textContent = gridLayout.headers[0];
   el.appendChild(hdr1);
   const hdr2 = document.createElement('div');
   hdr2.style.cssText = 'font-size:8px;color:var(--text-muted);text-align:center;align-self:end;padding-bottom:2px;letter-spacing:1px;';
-  hdr2.textContent = headers[1];
+  hdr2.textContent = gridLayout.headers[1];
   el.appendChild(hdr2);
 
-  order.forEach((posIdx, slot) => {
+  gridLayout.order.forEach((posKey) => {
+    const posIdx = getPositionIndex(posKey);
     const jersey = t.rotation[posIdx];
     const isLib = jersey === libero && libero > 0;
     const isServing = posIdx === 0 && state.serving === team;
     const div = document.createElement('div');
     div.className = 'pos-cell' + (isLib ? ' libero' : '') + (isServing ? ' serving' : '');
-    // Row label: slot 0-1=Far, 2-3=Center, 4-5=Ref side
-    const rowLabels = ['Far', 'Far', 'Mid', 'Mid', 'Ref', 'Ref'];
     div.innerHTML = `<span class="pos-num-label">${posIdx+1}</span><span class="pnum">#${jersey}</span>`;
     if (isServing) {
       const srv = document.createElement('span');
@@ -1376,6 +1629,82 @@ function renderPointLog() {
   ).join('') || '<div style="color:var(--text-muted);font-size:11px;padding:4px">No points yet</div>';
 }
 
+function getWinnerTeamCode() {
+  if (state.teamA.setsWon >= state.setsToWin) return 'A';
+  if (state.teamB.setsWon >= state.setsToWin) return 'B';
+  return null;
+}
+
+function getTeamLeaderboard(team) {
+  return Object.entries(state.playerPoints)
+    .filter(([key]) => key.startsWith(team + ':'))
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, points]) => {
+      const jersey = parseInt(key.split(':')[1], 10);
+      return { jersey, points };
+    });
+}
+
+function renderLeaderboard(team, elementId) {
+  const el = document.getElementById(elementId);
+  const entries = getTeamLeaderboard(team).slice(0, 6);
+  const teamName = getTeamState(team).name;
+  const color = team === 'A' ? 'var(--team-a)' : 'var(--team-b)';
+  el.innerHTML = entries.map(({ jersey, points }) =>
+    `<div class="stat-row"><span class="stat-label">${teamName} #${jersey}</span><span style="color:${color};font-weight:bold">${points} pts</span></div>`
+  ).join('') || '<div style="color:var(--text-muted);font-size:11px">No stats yet</div>';
+}
+
+function buildMatchSummary() {
+  const winnerCode = getWinnerTeamCode();
+  return {
+    gameNumber: state.matchNumber,
+    setsPlayed: state.setHistory.length,
+    winner: winnerCode ? getTeamState(winnerCode).name : null,
+    firstServer: getTeamState(state.firstServer).name,
+    teams: {
+      A: {
+        name: state.teamA.name,
+        setsWon: state.teamA.setsWon,
+        totalPoints: state.teamA.totalPts,
+        timeoutsUsed: state.teamA.toUsed,
+        substitutionsUsed: state.teamA.totalSubs,
+        leaderboard: getTeamLeaderboard('A')
+      },
+      B: {
+        name: state.teamB.name,
+        setsWon: state.teamB.setsWon,
+        totalPoints: state.teamB.totalPts,
+        timeoutsUsed: state.teamB.toUsed,
+        substitutionsUsed: state.teamB.totalSubs,
+        leaderboard: getTeamLeaderboard('B')
+      }
+    },
+    setHistory: state.setHistory.map(s => ({
+      set: s.set,
+      teamA: s.a,
+      teamB: s.b,
+      winner: getTeamState(s.winner).name
+    })),
+    substitutionLog: state.allSubsLog
+  };
+}
+
+function exportMatchSummary() {
+  const summary = buildMatchSummary();
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const fileName = `volleyref-match-${String(state.matchNumber).padStart(3, '0')}-${stamp}.json`;
+  const blob = new Blob([JSON.stringify(summary, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 // ===================== SUMMARY =====================
 function updateSummary() {
   document.getElementById('sum-setsA').textContent = state.teamA.setsWon;
@@ -1384,16 +1713,24 @@ function updateSummary() {
   document.getElementById('sum-ptsB').textContent = state.teamB.totalPts;
   document.getElementById('sum-toA').textContent = state.teamA.toUsed;
   document.getElementById('sum-toB').textContent = state.teamB.toUsed;
-  document.getElementById('sum-subA').textContent = state.teamA.subsUsed;
-  document.getElementById('sum-subB').textContent = state.teamB.subsUsed;
+  document.getElementById('sum-subA').textContent = state.teamA.totalSubs;
+  document.getElementById('sum-subB').textContent = state.teamB.totalSubs;
+  document.getElementById('sum-game-number').textContent = state.matchNumber;
+  document.getElementById('sum-sets-played').textContent = state.setHistory.length;
+  document.getElementById('sum-first-server').textContent = getTeamState(state.firstServer).name;
 
   // Winner
   const wb = document.getElementById('winner-banner');
-  if (state.teamA.setsWon >= state.setsToWin || state.teamB.setsWon >= state.setsToWin) {
+  const winnerCode = getWinnerTeamCode();
+  if (winnerCode) {
     wb.style.display = 'block';
-    const winner = state.teamA.setsWon >= state.setsToWin ? state.teamA.name : state.teamB.name;
+    const winner = getTeamState(winnerCode).name;
     document.getElementById('winner-name').textContent = winner;
-  } else { wb.style.display = 'none'; }
+    document.getElementById('sum-winner').textContent = winner;
+  } else {
+    wb.style.display = 'none';
+    document.getElementById('sum-winner').textContent = '-';
+  }
 
   // Set history
   const sh = document.getElementById('set-history-rows');
@@ -1405,21 +1742,14 @@ function updateSummary() {
     </div>`
   ).join('') || '<div style="color:var(--text-muted);font-size:11px">No completed sets</div>';
 
-  // Top scorers
-  const ts = document.getElementById('top-scorers');
-  const entries = Object.entries(state.playerPoints).sort((a,b) => b[1]-a[1]).slice(0,6);
-  ts.innerHTML = entries.map(([j,pts]) => {
-    const team = state.teamA.roster.includes(parseInt(j)) ? 'A' : 'B';
-    const color = team === 'A' ? 'var(--team-a)' : 'var(--team-b)';
-    return `<div class="stat-row"><span class="stat-label">${team==='A'?state.teamA.name:state.teamB.name} #${j}</span><span style="color:${color};font-weight:bold">${pts} pts</span></div>`;
-  }).join('') || '<div style="color:var(--text-muted);font-size:11px">No stats yet</div>';
+  document.getElementById('leaderboard-title-a').textContent = state.teamA.name;
+  document.getElementById('leaderboard-title-b').textContent = state.teamB.name;
+  renderLeaderboard('A', 'top-scorers-a');
+  renderLeaderboard('B', 'top-scorers-b');
 
   // Full sub log
   const fl = document.getElementById('full-sub-log');
-  const allSubs = [
-    ...state.teamA.subsLog.map(s => ({...s, team: 'A', tname: state.teamA.name})),
-    ...state.teamB.subsLog.map(s => ({...s, team: 'B', tname: state.teamB.name}))
-  ];
+  const allSubs = state.allSubsLog;
   fl.innerHTML = allSubs.map(s =>
     `<div style="padding:4px 0;border-bottom:1px solid var(--border)">
       <span style="color:${s.team==='A'?'var(--team-a)':'var(--team-b)'}">${s.tname}</span>
@@ -1483,14 +1813,16 @@ function resetAll() {
        state = {
          teamA: { name: state.teamA.name, roster: state.teamA.roster, libero: state.teamA.libero,
            rotation: [...state.teamA.roster], timeouts: 2, subsUsed: 0, subsLog: [],
-           totalPts: 0, setsWon: 0, toUsed: 0 },
+           totalPts: 0, setsWon: 0, toUsed: 0, totalSubs: 0 },
          teamB: { name: state.teamB.name, roster: state.teamB.roster, libero: state.teamB.libero,
            rotation: [...state.teamB.roster], timeouts: 2, subsUsed: 0, subsLog: [],
-           totalPts: 0, setsWon: 0, toUsed: 0 },
-         scoreA: 0, scoreB: 0, currentSet: 1, serving: 'A',
-         setHistory: [], pointLog: [], playerPoints: {},
-         maxSubs: state.maxSubs, setsToWin: state.setsToWin, ptsPerSet: state.ptsPerSet,
-         gameStarted: true, currentSubTeam: null, lastTouchPlayer: null, lastTouchTeam: null
+           totalPts: 0, setsWon: 0, toUsed: 0, totalSubs: 0 },
+         scoreA: 0, scoreB: 0, currentSet: 1, matchNumber: getNextMatchNumber(), serving: state.firstServer,
+         firstServer: state.firstServer,
+         setHistory: [], allSubsLog: [], pointLog: [], playerPoints: {},
+         maxSubs: state.maxSubs, setsToWin: state.setsToWin, ptsPerSet: getPointsTargetForSet(1),
+         gameStarted: true, matchEnded: false, summaryExported: false,
+         currentSubTeam: null, lastTouchPlayer: null, lastTouchTeam: null
        };
        subRegistry = { A: {}, B: {} };
        closeModal();
