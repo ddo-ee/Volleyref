@@ -10,25 +10,26 @@
 <title>VolleyRef — Second Referee System</title>
 <style>
   :root {
-    --court-green: #1a3a2a;
-    --court-line: #f0e8d0;
-    --court-surface: #1f4433;
-    --team-a: #e8a020;
-    --team-b: #2090d8;
+    --court-green: #ff9900;
+    --court-line: #ffffff;
+    --court-surface: #1801eb2d;
+    --team-a: #00c2fd;
+    --team-b: #00cfad;
     --team-a-dark: #b07010;
     --team-b-dark: #1060a8;
-    --bg-dark: #0d1f17;
-    --bg-panel: #142a1e;
-    --bg-card: #1a3a28;
+    --bg-dark: #0f0d1f;
+    --bg-panel: #14182a;
+    --bg-card: #1a253a;
     --text-primary: #f0ede6;
     --text-secondary: #9ab09a;
-    --text-muted: #6a8a6a;
-    --border: #2a5a3a;
+    --text-muted: #10b1a9;
+    --border: #1b325e;
     --danger: #e04040;
-    --success: #40c070;
+    --success: #00bb19;
     --warn: #e0a020;
-    --font-main: 'Courier New', monospace;
-    --font-display: Georgia, serif;
+    --font-main: 'Courier New', Helvetica;
+    --font-display: Georgia, bold;
+    --active-color: #ffe600;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -58,7 +59,7 @@
     letter-spacing: 2px;
     color: var(--court-line);
   }
-  #topbar .logo span { color: var(--team-a); }
+  #topbar .logo span { color: var(--team-a-dark); }
   #nav-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
   .nav-tab {
     padding: 6px 14px;
@@ -72,7 +73,7 @@
     text-transform: uppercase;
     transition: all 0.15s;
   }
-  .nav-tab.active { background: var(--court-surface); color: var(--court-line); border-color: var(--court-line); }
+  .nav-tab.active { background: var(--court-surface); color: var(--court-line); border-color: var(--active-color); }
   .nav-tab:hover:not(.active) { color: var(--text-primary); border-color: var(--text-muted); }
 
   /* ===================== VIEWS ===================== */
@@ -134,6 +135,7 @@
     grid-template-rows: repeat(3, 1fr);
     gap: 5px;
     aspect-ratio: 2/3;
+    min-height: 170px;
     max-height: 180px;
   }
   .pos-cell {
@@ -149,10 +151,11 @@
     position: relative;
     flex-direction: column;
     gap: 2px;
+    min-height: 42px;
   }
   .pos-cell:hover { border-color: var(--court-line); }
   .pos-cell.libero { background: #1a2a4a; border-color: #3a5a8a; color: #6ab0e0; }
-  .pos-cell.serving { background: #3a2a0a; border-color: var(--warn); }
+  .pos-cell.serving { background: #0446d469; border-color: #00bb19; }
   .pos-cell .pnum { font-size: 16px; }
   .pos-cell .plabel { font-size: 9px; color: var(--text-muted); letter-spacing: 1px; }
   .pos-num-label {
@@ -235,6 +238,79 @@
     gap: 12px;
     margin-bottom: 16px;
   }
+  .game-control-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .game-court-cell {
+    min-width: 0;
+  }
+  .game-court-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 3px minmax(0, 1fr);
+    margin-bottom: 12px;
+    padding: 0;
+    overflow: hidden;
+    align-items: stretch;
+  }
+  .game-team-side {
+    min-width: 0;
+    display: grid;
+    grid-template-rows: 36px minmax(230px, auto) 42px 42px 72px 42px;
+    align-self: stretch;
+  }
+  .game-team-head {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    min-height: 36px;
+  }
+  .game-team-head span {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: bold;
+  }
+  .game-team-head.team-a-head { background: rgba(232,160,32,0.07); }
+  .game-team-head.team-b-head { background: rgba(32,144,216,0.07); }
+  .game-team-rotation {
+    padding: 10px 12px;
+    min-height: 230px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .game-team-row {
+    border-top: 1px solid var(--border);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+  }
+  .game-team-log {
+    border-top: 1px solid var(--border);
+    padding: 6px 12px;
+    min-height: 72px;
+    overflow: hidden;
+  }
+  .game-net-divider {
+    grid-column: 2;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .game-net-divider span {
+    position: absolute;
+    writing-mode: vertical-lr;
+    font-size: 8px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transform: rotate(180deg);
+  }
   .summary-meta {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -306,25 +382,47 @@
   }
 
   /* ===================== COURT VIEW ===================== */
-  #court-outer {
+  #view-court.active {
+    min-height: calc(100vh - 58px);
     display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
     flex-direction: column;
+  }
+  .court-view-header {
+    margin-bottom: 10px;
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  #court-outer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    gap: 12px;
+    align-items: start;
+    flex: 1 1 auto;
+    min-height: 0;
   }
   #court-svg-wrap {
     width: 100%;
+    max-width: min(100%, 136vh, 1080px);
+    min-width: 0;
+    justify-self: center;
   }
   #court-controls {
     width: 100%;
     display: grid;
-    grid-template-columns: auto auto 1fr 1fr;
-    gap: 12px;
-    align-items: start;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    align-content: start;
   }
   #court-svg {
     width: 100%;
-    border: 2px solid #2a5a3a;
+    height: auto;
+    max-height: min(68vh, 600px);
+    border: 2px solid #ffffff;
+    background: #0873a7;
+    display: block;
   }
   .player-circle {
     cursor: pointer;
@@ -339,7 +437,6 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     padding: 10px 12px;
-    margin-bottom: 10px;
     min-height: 60px;
   }
   .last-touch-label { font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; }
@@ -358,7 +455,7 @@
     cursor: pointer;
     transition: all 0.2s;
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 0;
   }
   #score-confirm-btn:hover { background: rgba(64,192,112,0.25); }
   #score-confirm-btn:disabled { opacity: 0.3; cursor: not-allowed; }
@@ -377,6 +474,14 @@
     transition: all 0.15s;
   }
   #clear-touch-btn:hover { color: var(--text-primary); }
+  .court-score-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+  }
+  .player-stats-panel {
+    min-height: 0;
+  }
 
   /* ===================== SETUP VIEW ===================== */
   .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -407,7 +512,7 @@
   }
   .players-setup { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 8px; }
   .player-num-input {
-    background: var(--court-surface);
+    background: var(--bg-dark);
     border: 1px solid var(--border);
     color: var(--text-primary);
     padding: 5px 2px;
@@ -450,17 +555,151 @@
   #modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
   /* ===================== RESPONSIVE ===================== */
+  @media (min-width: 1025px) {
+    .rotation-grid {
+      min-height: 260px;
+      max-height: 340px;
+      gap: 8px;
+    }
+    .pos-cell {
+      min-height: 72px;
+      font-size: 16px;
+    }
+    .pos-cell .pnum { font-size: 24px; }
+    .pos-cell .plabel { font-size: 11px; }
+    .pos-num-label {
+      top: 4px;
+      left: 6px;
+      font-size: 10px;
+    }
+  }
   @media (max-width: 1024px) {
     .match-rules-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    #court-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #court-outer { grid-template-columns: minmax(0, 1fr) minmax(240px, 300px); }
+    #court-svg-wrap { max-width: min(100%, 104vh, 860px); }
+    #court-svg { max-height: min(52vh, 430px); }
   }
   @media (max-width: 700px) {
     #main-grid { grid-template-columns: 1fr; }
     .setup-grid { grid-template-columns: 1fr; }
     .summary-grid { grid-template-columns: 1fr; }
     #score-header { grid-template-columns: 1fr; }
-    #court-outer { flex-direction: column; }
-    #court-controls { width: 100%; grid-template-columns: 1fr; }
+    #view-game {
+      padding: 8px;
+      max-height: calc(100vh - 54px);
+      overflow-y: auto;
+    }
+    #view-game #score-header {
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+      align-items: stretch;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--bg-dark);
+      padding-bottom: 4px;
+    }
+    #view-game .team-score-block {
+      padding: 6px 8px;
+    }
+    #view-game .team-name-label {
+      font-size: 8px;
+      letter-spacing: 1px;
+    }
+    #view-game .team-name-val {
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #view-game .team-score-big {
+      font-size: 34px;
+    }
+    #view-game .team-sets {
+      font-size: 10px;
+    }
+    #view-game #center-info {
+      min-width: 58px;
+      align-self: center;
+    }
+    #view-game #set-display {
+      font-size: 22px;
+    }
+    #view-game #set-label,
+    #view-game #serve-indicator {
+      font-size: 8px;
+      letter-spacing: 1px;
+    }
+    #view-game .game-score-actions {
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    #view-game .game-score-actions .btn-big {
+      padding: 9px 6px !important;
+      font-size: 11px !important;
+      letter-spacing: 1px;
+      width: 100%;
+    }
+    #view-game .panel {
+      padding: 8px;
+    }
+    #view-game .game-court-panel {
+      padding: 0;
+    }
+    #view-game .game-team-side {
+      grid-template-rows: 32px minmax(180px, auto) 38px 38px 58px 38px;
+    }
+    #view-game .game-team-head {
+      min-height: 32px;
+      padding: 7px 8px;
+    }
+    #view-game .game-team-rotation {
+      min-height: 180px;
+      padding: 8px;
+    }
+    #view-game .game-team-row {
+      min-height: 38px;
+      padding: 6px 8px;
+      gap: 5px;
+    }
+    #view-game .game-team-log {
+      min-height: 58px;
+      padding: 5px 8px;
+    }
+    #view-game .rotation-grid {
+      min-height: clamp(150px, 52vw, 240px);
+      max-height: none;
+      gap: 4px;
+    }
+    #view-game .pos-cell {
+      min-height: 42px;
+      font-size: 11px;
+      gap: 0;
+    }
+    #view-game .pos-cell .pnum {
+      font-size: clamp(16px, 4.5vw, 22px);
+    }
+    #view-game .pos-num-label {
+      font-size: 7px;
+      top: 1px;
+      left: 3px;
+    }
+    #view-game .resource-btn {
+      font-size: 9px;
+      padding: 4px 6px;
+      letter-spacing: 0;
+    }
+    #view-game #score-log {
+      max-height: 76px;
+    }
+    #view-court.active { min-height: auto; }
+    #court-outer { grid-template-columns: 1fr; }
+    #court-svg-wrap { max-width: 100%; }
+    #court-svg { max-height: none; }
+    #court-controls { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .player-stats-panel { grid-column: 1 / -1; }
     .game-score-actions { grid-template-columns: 1fr; }
     .match-rules-grid { grid-template-columns: 1fr; }
     .leaderboard-split { grid-template-columns: 1fr; }
@@ -469,6 +708,10 @@
     .rotation-grid { max-height: none; }
     .view { padding: 12px; }
     .btn-big { width: 100%; text-align: center; }
+    .court-view-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
   }
   @media (max-width: 560px) {
     .players-setup { grid-template-columns: repeat(3, 1fr); }
@@ -477,6 +720,9 @@
     .team-name-val { font-size: 16px; }
     #set-display { font-size: 24px; }
     #alert-bar { min-width: 0; width: calc(100% - 24px); }
+  }
+  @media (max-width: 420px) {
+    #court-controls { grid-template-columns: 1fr; }
   }
 
   /* Scrollbar */
@@ -567,7 +813,7 @@
 <div id="view-game" class="view">
   <!-- Score Header -->
   <div id="score-header">
-    <div class="team-score-block team-a">
+    <div class="team-score-block team-a" data-score-team="A">
       <div class="team-name-label">Team A</div>
       <div class="team-name-val" id="display-nameA">Team A</div>
       <div class="team-score-big" id="scoreA-big">0</div>
@@ -582,7 +828,7 @@
         <button class="resource-btn btn-warn" onclick="newSet()">New Set</button>
       </div>
     </div>
-    <div class="team-score-block team-b">
+    <div class="team-score-block team-b" data-score-team="B">
       <div class="team-name-label">Team B</div>
       <div class="team-name-val" id="display-nameB">Team B</div>
       <div class="team-score-big" id="scoreB-big">0</div>
@@ -592,63 +838,72 @@
 
   <!-- Score Buttons -->
   <div class="game-score-actions">
-    <button class="btn-big btn-a" style="width:100%;padding:16px;font-size:16px" onclick="addPoint('A')">+ POINT — TEAM A</button>
-    <button class="btn-big btn-b" style="width:100%;padding:16px;font-size:16px" onclick="addPoint('B')">+ POINT — TEAM B</button>
+    <button class="btn-big btn-a" style="width:100%;padding:16px;font-size:16px" id="point-btn-A" data-point-team="A" onclick="addPoint('A')">+ POINT — TEAM A</button>
+    <button class="btn-big btn-b" style="width:100%;padding:16px;font-size:16px" id="point-btn-B" data-point-team="B" onclick="addPoint('B')">+ POINT — TEAM B</button>
   </div>
 
+  <div class="game-control-row">
+    <button class="resource-btn btn-neutral" onclick="toggleCourtSides()" id="game-change-court-btn">Change Court</button>
+  </div>
+
+  <!-- Combined Teams Panel -->
+  <div class="panel game-court-panel">
+    <div class="game-team-side" data-game-side="A">
+      <div class="game-team-head team-a-head">
+        <span style="color:var(--team-a)" id="combined-nameA">Team A</span>
+      </div>
+      <div class="game-team-rotation">
+        <div style="font-size:9px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Rotation</div>
+        <div class="rotation-grid" id="rotA"></div>
+      </div>
+      <div class="game-team-row">
+        <span style="font-size:10px;color:var(--text-secondary);flex:1">Timeouts</span>
+        <div class="resource-dots" id="toA-dots"></div>
+        <button class="resource-btn btn-a" onclick="useTimeout('A')">TO</button>
+      </div>
+      <div class="game-team-row">
+        <span style="font-size:10px;color:var(--text-secondary);flex:1">Subs <span id="subsA-count">0</span>/6</span>
+        <button class="resource-btn btn-a" onclick="openSubModal('A')">Sub</button>
+      </div>
+      <div class="game-team-log">
+        <div id="sublog-A" style="max-height:60px;overflow-y:auto;font-size:10px"></div>
+      </div>
+      <div class="game-team-row" style="gap:6px">
+        <button class="resource-btn btn-a" onclick="rotateTeam('A','fwd')">Rotate &gt;</button>
+        <button class="resource-btn btn-neutral" onclick="rotateTeam('A','back')">&lt; Back</button>
+      </div>
+    </div>
+
+    <div class="game-net-divider"><span>NET</span></div>
+
+    <div class="game-team-side" data-game-side="B">
+      <div class="game-team-head team-b-head">
+        <span style="color:var(--team-b)" id="combined-nameB">Team B</span>
+      </div>
+      <div class="game-team-rotation">
+        <div style="font-size:9px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Rotation</div>
+        <div class="rotation-grid" id="rotB"></div>
+      </div>
+      <div class="game-team-row">
+        <span style="font-size:10px;color:var(--text-secondary);flex:1">Timeouts</span>
+        <div class="resource-dots" id="toB-dots"></div>
+        <button class="resource-btn btn-b" onclick="useTimeout('B')">TO</button>
+      </div>
+      <div class="game-team-row">
+        <span style="font-size:10px;color:var(--text-secondary);flex:1">Subs <span id="subsB-count">0</span>/6</span>
+        <button class="resource-btn btn-b" onclick="openSubModal('B')">Sub</button>
+      </div>
+      <div class="game-team-log">
+        <div id="sublog-B" style="max-height:60px;overflow-y:auto;font-size:10px"></div>
+      </div>
+      <div class="game-team-row" style="gap:6px">
+        <button class="resource-btn btn-neutral" onclick="rotateTeam('B','back')">&lt; Back</button>
+        <button class="resource-btn btn-b" onclick="rotateTeam('B','fwd')">Rotate &gt;</button>
+      </div>
+    </div>
+  </div>
+  <!-- Bottom row: Score Log + Serve Info -->
   <div id="main-grid">
-    <!-- TEAM A Panel -->
-    <div class="panel">
-      <div class="panel-title" style="color:var(--team-a)">Team A — Rotation & Resources</div>
-
-      <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-bottom:5px;text-transform:uppercase">Rotation</div>
-      <div class="rotation-grid" id="rotA"></div>
-
-      <div style="margin-top:12px">
-        <div class="resource-row">
-          <div class="resource-label">Timeouts</div>
-          <div class="resource-dots" id="toA-dots"></div>
-          <button class="resource-btn btn-a" onclick="useTimeout('A')">Use TO</button>
-        </div>
-        <div class="resource-row">
-          <div class="resource-label">Substitutions (<span id="subsA-count">0</span>/6)</div>
-          <button class="resource-btn btn-a" onclick="openSubModal('A')">Substitute</button>
-        </div>
-        <div id="sublog-A" style="max-height:80px;overflow-y:auto;margin-top:4px"></div>
-      </div>
-
-      <div style="margin-top:10px;display:flex;gap:6px">
-        <button class="resource-btn btn-a" onclick="rotateTeam('A','fwd')">Rotate ▶</button>
-        <button class="resource-btn btn-neutral" onclick="rotateTeam('A','back')">◀ Back</button>
-      </div>
-    </div>
-
-    <!-- TEAM B Panel -->
-    <div class="panel">
-      <div class="panel-title" style="color:var(--team-b)">Team B — Rotation & Resources</div>
-
-      <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-bottom:5px;text-transform:uppercase">Rotation</div>
-      <div class="rotation-grid" id="rotB"></div>
-
-      <div style="margin-top:12px">
-        <div class="resource-row">
-          <div class="resource-label">Timeouts</div>
-          <div class="resource-dots" id="toB-dots"></div>
-          <button class="resource-btn btn-b" onclick="useTimeout('B')">Use TO</button>
-        </div>
-        <div class="resource-row">
-          <div class="resource-label">Substitutions (<span id="subsB-count">0</span>/6)</div>
-          <button class="resource-btn btn-b" onclick="openSubModal('B')">Substitute</button>
-        </div>
-        <div id="sublog-B" style="max-height:80px;overflow-y:auto;margin-top:4px"></div>
-      </div>
-
-      <div style="margin-top:10px;display:flex;gap:6px">
-        <button class="resource-btn btn-b" onclick="rotateTeam('B','fwd')">Rotate ▶</button>
-        <button class="resource-btn btn-neutral" onclick="rotateTeam('B','back')">◀ Back</button>
-      </div>
-    </div>
-
     <!-- Score Log -->
     <div class="panel">
       <div class="panel-title">Point Log — Current Set</div>
@@ -676,44 +931,47 @@
 
 <!-- ===================== COURT VIEW ===================== -->
 <div id="view-court" class="view">
-  <div style="margin-bottom:12px">
-    <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Technical Committee</div>
-    <div style="font-family:var(--font-display);font-size:20px;color:var(--court-line)">Court — Touch & Score</div>
-    <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Tap a player who last touched the ball, then confirm the point.</div>
+  <div class="court-view-header">
+    <div>
+      <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Technical Committee</div>
+      <div style="font-family:var(--font-display);font-size:20px;color:var(--court-line)">Court — Touch & Score</div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Tap a player who last touched the ball, then confirm the point.</div>
+    </div>
+    <button class="resource-btn btn-neutral" onclick="toggleCourtSides()" id="court-change-court-btn">Change Court</button>
   </div>
 
   <div id="court-outer">
     <div id="court-svg-wrap">
       <svg id="court-svg" viewBox="0 0 560 280" xmlns="http://www.w3.org/2000/svg">
-        <rect width="560" height="280" fill="#1a3a28"/>
-        <rect x="20" y="20" width="520" height="240" fill="none" stroke="#c8b870" stroke-width="2"/>
-        <line x1="280" y1="10" x2="280" y2="270" stroke="#c8b870" stroke-width="3"/>
-        <line x1="280" y1="10" x2="280" y2="20" stroke="#c8b870" stroke-width="4"/>
-        <line x1="280" y1="260" x2="280" y2="270" stroke="#c8b870" stroke-width="4"/>
-        <line x1="193" y1="20" x2="193" y2="260" stroke="#c8b870" stroke-width="1.5" stroke-dasharray="6,4"/>
-        <line x1="367" y1="20" x2="367" y2="260" stroke="#c8b870" stroke-width="1.5" stroke-dasharray="6,4"/>
-        <text x="140" y="13" text-anchor="middle" fill="#e8a020" font-size="9" font-family="Courier New" font-weight="bold" id="svg-labelA">TEAM A</text>
-        <text x="420" y="13" text-anchor="middle" fill="#2090d8" font-size="9" font-family="Courier New" font-weight="bold" id="svg-labelB">TEAM B</text>
-        <text x="280" y="278" text-anchor="middle" fill="#c8b870" font-size="8" font-family="Courier New">NET</text>
-        <text x="8" y="140" text-anchor="middle" fill="#6a8a6a" font-size="7" font-family="Courier New" transform="rotate(-90,8,140)">REFEREE</text>
+        <rect width="560" height="280" fill="#0873a7"/>
+        <rect x="20" y="20" width="520" height="240" fill="#ff915c" stroke="#ffffff" stroke-width="2"/>
+        <line x1="280" y1="10" x2="280" y2="270" stroke="#ffffff" stroke-width="3"/>
+        <line x1="280" y1="10" x2="280" y2="20" stroke="#ffffff" stroke-width="4"/>
+        <line x1="280" y1="260" x2="280" y2="270" stroke="#ffffff" stroke-width="4"/>
+        <line x1="193" y1="20" x2="193" y2="260" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <line x1="367" y1="20" x2="367" y2="260" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <text x="140" y="13" text-anchor="middle" fill="#ff915c" font-size="12" font-family="Courier New" font-weight="bold" id="svg-labelA">TEAM A</text>
+        <text x="420" y="13" text-anchor="middle" fill="#00b86b" font-size="12" font-family="Courier New" font-weight="bold" id="svg-labelB">TEAM B</text>
+        <text x="280" y="278" text-anchor="middle" fill="#ffffff" font-size="8" font-family="Courier New">NET</text>
+        <text x="8" y="140" text-anchor="middle" fill="#ffffff" font-size="7" font-family="Courier New" transform="rotate(-90,8,140)">REFEREE</text>
         <g id="court-players"></g>
       </svg>
     </div>
 
     <div id="court-controls">
-      <div class="last-touch-display" style="min-width:160px">
+      <div class="last-touch-display">
         <div class="last-touch-label">Last Touch</div>
         <div class="last-touch-val" id="last-touch-val">—</div>
         <div style="font-size:10px;color:var(--text-muted);margin-top:2px" id="last-touch-team">Tap a player on court</div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:6px;min-width:160px">
+      <div style="display:flex;flex-direction:column;gap:6px;";>
         <button id="score-confirm-btn" onclick="confirmCourtPoint()" disabled>
-          ✓ CONFIRM POINT
+          CONFIRM POINT
         </button>
-        <button id="clear-touch-btn" onclick="clearTouch()">✕ Clear Selection</button>
+        <button id="clear-touch-btn" onclick="clearTouch()">Clear Selection</button>
 
-        <div style="margin-top:6px">
+        <div class="court-score-card">
           <div class="panel-title">Score</div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
             <div style="text-align:center">
@@ -730,7 +988,7 @@
         </div>
       </div>
 
-      <div style="grid-column:3/5">
+      <div class="player-stats-panel">
         <div class="panel-title">Player Stats (Points)</div>
         <div id="player-stats" style="max-height:160px;overflow-y:auto;font-size:11px;columns:2;column-gap:12px"></div>
       </div>
@@ -912,6 +1170,7 @@ let state = {
   currentSubTeam: null,
   lastTouchPlayer: null,
   lastTouchTeam: null,
+  courtSwapped: false,
 };
 
 const TEAM_LAYOUTS = {
@@ -980,7 +1239,7 @@ function getPositionIndex(posKey) {
 }
 
 function getCourtPositionList(team) {
-  const layout = TEAM_LAYOUTS[team].courtPositions;
+  const layout = getCourtLayoutForTeam(team).courtPositions;
   return [
     layout.pos1,
     layout.pos2,
@@ -989,6 +1248,11 @@ function getCourtPositionList(team) {
     layout.pos5,
     layout.pos6
   ];
+}
+
+function getCourtLayoutForTeam(team) {
+  const layoutTeam = state.courtSwapped ? (team === 'A' ? 'B' : 'A') : team;
+  return TEAM_LAYOUTS[layoutTeam];
 }
 
 // ===================== SETUP =====================
@@ -1194,6 +1458,104 @@ function rotateTeam(team, dir) {
   checkRotationValidity();
 }
 
+function toggleCourtSides() {
+  state.courtSwapped = !state.courtSwapped;
+  renderAll();
+  showAlert('Court sides changed.', 'success');
+}
+
+function updateGameCourtSides() {
+  // ── Score header: swap only the score blocks, center stays in the middle ──
+  const scoreHeader = document.getElementById('score-header');
+  if (scoreHeader) {
+    const blockA = scoreHeader.querySelector('[data-score-team="A"]');
+    const blockB = scoreHeader.querySelector('[data-score-team="B"]');
+    const center = document.getElementById('center-info');
+    if (blockA && blockB && center) {
+      blockA.style.gridColumn = '';
+      blockB.style.gridColumn = '';
+      center.style.gridColumn = '';
+      if (state.courtSwapped) {
+        // Order: B | center | A
+        scoreHeader.insertBefore(blockB, center); // B goes before center
+        scoreHeader.appendChild(blockA);           // A goes after center
+      } else {
+        // Order: A | center | B
+        scoreHeader.insertBefore(blockA, center); // A goes before center
+        scoreHeader.appendChild(blockB);           // B goes after center
+      }
+    }
+  }
+
+  // ── Point buttons: physically reorder A/B buttons ──
+  const scoreActions = document.querySelector('.game-score-actions');
+  if (scoreActions) {
+    const btnA = scoreActions.querySelector('[data-point-team="A"]');
+    const btnB = scoreActions.querySelector('[data-point-team="B"]');
+    if (btnA && btnB) {
+      btnA.style.gridColumn = '';
+      btnB.style.gridColumn = '';
+      if (state.courtSwapped) {
+        scoreActions.appendChild(btnA); // B, A
+      } else {
+        scoreActions.insertBefore(btnA, btnB); // A, B
+      }
+    }
+  }
+
+  // ── Court panel: physically swap the two team sides around the net divider ──
+  const courtPanel = document.querySelector('.game-court-panel');
+  if (courtPanel) {
+    const sideA = courtPanel.querySelector('[data-game-side="A"]');
+    const sideB = courtPanel.querySelector('[data-game-side="B"]');
+    const netDiv = courtPanel.querySelector('.game-net-divider');
+    if (sideA && sideB && netDiv) {
+      // Clear any lingering inline styles from old code
+      sideA.style.gridColumn = '';
+      sideB.style.gridColumn = '';
+      sideA.style.textAlign = '';
+      sideB.style.textAlign = '';
+      sideA.querySelectorAll('.game-team-row').forEach(r => r.style.flexDirection = '');
+      sideB.querySelectorAll('.game-team-row').forEach(r => r.style.flexDirection = '');
+      sideA.querySelectorAll('.game-team-head, .game-team-rotation').forEach(s => {
+        s.style.textAlign = ''; s.style.alignItems = '';
+      });
+      sideB.querySelectorAll('.game-team-head, .game-team-rotation').forEach(s => {
+        s.style.textAlign = ''; s.style.alignItems = '';
+      });
+
+      if (state.courtSwapped) {
+        // Order: B | NET | A
+        courtPanel.insertBefore(sideB, netDiv); // sideB first
+        courtPanel.appendChild(sideA);           // sideA last
+      } else {
+        // Order: A | NET | B
+        courtPanel.insertBefore(sideA, netDiv); // sideA first
+        courtPanel.appendChild(sideB);           // sideB last
+      }
+    }
+  }
+
+  // ── Team name labels (always reflect actual team names) ──
+  const nameA = document.getElementById('combined-nameA');
+  const nameB = document.getElementById('combined-nameB');
+  if (nameA) nameA.textContent = state.teamA.name;
+  if (nameB) nameB.textContent = state.teamB.name;
+
+  // ── SVG court labels ──
+  const labelA = document.getElementById('svg-labelA');
+  const labelB = document.getElementById('svg-labelB');
+  if (labelA) labelA.setAttribute('x', state.courtSwapped ? '420' : '140');
+  if (labelB) labelB.setAttribute('x', state.courtSwapped ? '140' : '420');
+
+  // ── Button label ──
+  const btnText = state.courtSwapped ? '⇄ Court: Swapped' : '⇄ Change Court';
+  const gameBtn = document.getElementById('game-change-court-btn');
+  const courtBtn = document.getElementById('court-change-court-btn');
+  if (gameBtn) gameBtn.textContent = btnText;
+  if (courtBtn) courtBtn.textContent = btnText;
+}
+
 function checkRotationValidity() {
   document.getElementById('rotation-status').innerHTML = '● Valid <span style="color:var(--text-muted);font-size:10px">(positional check)</span>';
 }
@@ -1216,10 +1578,13 @@ function openSubModal(team) {
   state.currentSubTeam = team;
   const t = getTeamState(team);
   const remaining = state.maxSubs - t.subsUsed;
+  const subIn = document.getElementById('sub-in-jersey');
 
   document.getElementById('sub-modal-title').textContent = 'Substitution — ' + t.name;
   document.getElementById('sub-modal-info').textContent = remaining + ' substitutions remaining this set.';
   document.getElementById('sub-validation-msg').textContent = '';
+  subIn.value = '';
+  subIn.readOnly = false;
 
   const sel = document.getElementById('sub-out');
   sel.innerHTML = '';
@@ -1229,6 +1594,7 @@ function openSubModal(team) {
     opt.textContent = '#' + jersey + ' (Pos ' + (idx+1) + ')';
     sel.appendChild(opt);
   });
+  sel.onchange = updateSubModalBuddyHint;
 
   if (remaining <= 0) {
     document.getElementById('sub-modal-info').innerHTML = '<span style="color:var(--danger)">No substitutions remaining!</span>';
@@ -1238,10 +1604,43 @@ function openSubModal(team) {
   }
 
   document.getElementById('sub-overlay').style.display = 'flex';
+  updateSubModalBuddyHint();
 }
 
 function closeSubModal() {
   document.getElementById('sub-overlay').style.display = 'none';
+}
+
+function getSubBuddy(team, jersey) {
+  return subRegistry[team][jersey] || null;
+}
+
+function updateSubModalBuddyHint() {
+  const team = state.currentSubTeam;
+  if (!team) return;
+
+  const t = getTeamState(team);
+  const outJersey = parseInt(document.getElementById('sub-out').value, 10);
+  const inInput = document.getElementById('sub-in-jersey');
+  const msg = document.getElementById('sub-validation-msg');
+  const info = document.getElementById('sub-modal-info');
+  const remaining = state.maxSubs - t.subsUsed;
+  const buddy = getSubBuddy(team, outJersey);
+
+  msg.textContent = '';
+  info.textContent = remaining + ' substitutions remaining this set.';
+  inInput.readOnly = false;
+
+  if (buddy) {
+    inInput.value = buddy;
+    inInput.readOnly = true;
+    info.innerHTML = '#' + outJersey + ' is tied to #' + buddy + ' for this set. Only this buddy substitution is allowed.';
+    if (t.rotation.includes(buddy)) {
+      msg.innerHTML = '<span style="color:var(--danger)">#' + buddy + ' is already on court, so #' + outJersey + ' cannot be substituted right now.</span>';
+    }
+  } else {
+    inInput.value = '';
+  }
 }
 
 function confirmSub() {
@@ -1262,6 +1661,16 @@ function confirmSub() {
 
   // Check: can't re-enter in same set (simplified FIVB: a player can only return once, replaced by same)
   const reg = subRegistry[team];
+  const outBuddy = reg[outJersey];
+  const inBuddy = reg[inJersey];
+  if (outBuddy && outBuddy !== inJersey) {
+    msg.innerHTML = '<span style="color:var(--danger)">Invalid: #' + outJersey + ' is tied to #' + outBuddy + ' for this set.</span>';
+    return;
+  }
+  if (inBuddy && inBuddy !== outJersey) {
+    msg.innerHTML = '<span style="color:var(--danger)">Invalid: #' + inJersey + ' is tied to #' + inBuddy + ' for this set.</span>';
+    return;
+  }
   if (reg[inJersey] && reg[inJersey] !== outJersey) {
     msg.innerHTML = '<span style="color:var(--danger)">Invalid: #' + inJersey + ' can only replace #' + (reg[inJersey]||'—') + ' per FIVB rules.</span>';
     return;
@@ -1398,11 +1807,11 @@ function getCourtPositions(team) {
 }
 
 function drawPlayerOnCourt(svg, x, y, jersey, team, isLibero) {
-  const color = team === 'A' ? '#e8a020' : '#2090d8';
+  const color = team === 'A' ? '#0057ff' : '#00b86b';
   const liberoColor = '#9060d0';
   const fill = isLibero ? liberoColor : color;
   const isSelected = state.lastTouchPlayer === jersey && state.lastTouchTeam === team;
-  const r = 22;
+  const r = 25;
 
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   g.setAttribute('class', 'player-circle' + (isSelected ? ' selected' : ''));
@@ -1420,9 +1829,9 @@ function drawPlayerOnCourt(svg, x, y, jersey, team, isLibero) {
 
   const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
   text.setAttribute('x', x);
-  text.setAttribute('y', y + 5);
+  text.setAttribute('y', y + 6);
   text.setAttribute('text-anchor', 'middle');
-  text.setAttribute('font-size', '14');
+  text.setAttribute('font-size', '16');
   text.setAttribute('font-weight', 'bold');
   text.setAttribute('fill', isSelected ? fill : '#ffffff');
   text.setAttribute('font-family', 'Courier New');
@@ -1494,6 +1903,8 @@ function renderAll() {
   document.getElementById('set-display').textContent = state.currentSet;
   document.getElementById('display-nameA').textContent = state.teamA.name;
   document.getElementById('display-nameB').textContent = state.teamB.name;
+  document.getElementById('point-btn-A').textContent = '+ POINT — ' + state.teamA.name;
+  document.getElementById('point-btn-B').textContent = '+ POINT — ' + state.teamB.name;
 
   // Serve indicator
   const servingTeam = state.serving === 'A' ? state.teamA : state.teamB;
@@ -1525,13 +1936,14 @@ function renderAll() {
   renderCourt();
   updateCourtScores();
   renderPlayerStats();
+  updateGameCourtSides();
 }
 
 function renderRotation(team) {
   const el = document.getElementById('rot'+team);
   const t = getTeamState(team);
   const libero = t.libero;
-  const gridLayout = TEAM_LAYOUTS[team].rotationGrid;
+  const gridLayout = getCourtLayoutForTeam(team).rotationGrid;
   el.innerHTML = '';
 
   // Add col headers as first row using CSS grid column span trick via separate divs
@@ -1790,7 +2202,8 @@ function resetAll() {
          setHistory: [], allSubsLog: [], pointLog: [], playerPoints: {},
          maxSubs: state.maxSubs, setsToWin: state.setsToWin, ptsPerSet: getPointsTargetForSet(1),
          gameStarted: true, matchEnded: false, summaryExported: false,
-         currentSubTeam: null, lastTouchPlayer: null, lastTouchTeam: null
+         currentSubTeam: null, lastTouchPlayer: null, lastTouchTeam: null,
+         courtSwapped: state.courtSwapped
        };
        subRegistry = { A: {}, B: {} };
        closeModal();
