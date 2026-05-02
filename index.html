@@ -523,6 +523,28 @@
   }
   .player-num-label { font-size: 9px; color: var(--text-muted); text-align: center; margin-bottom: 2px; }
 
+  /* ===================== TEAMS VIEW ===================== */
+  .teams-layout { display: grid; grid-template-columns: minmax(200px, 280px) 1fr; gap: 16px; align-items: start; }
+  .teams-list-panel { background: var(--bg-card); border: 1px solid var(--border); padding: 14px; }
+  .team-list-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid var(--border); background: var(--bg-dark); margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s; }
+  .team-list-item:hover { border-color: var(--text-muted); }
+  .team-list-item.active { border-color: var(--active-color); background: var(--bg-panel); }
+  .team-color-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .team-list-name { font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .team-list-count { font-size: 10px; color: var(--text-muted); }
+  .team-editor-panel { background: var(--bg-card); border: 1px solid var(--border); padding: 16px; }
+  .team-editor-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .player-roster-grid { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 10px; }
+  .player-roster-row { display: grid; grid-template-columns: 28px 80px 1fr 28px; gap: 6px; align-items: center; background: var(--bg-dark); border: 1px solid var(--border); padding: 5px 8px; }
+  .player-roster-row .row-num { font-size: 10px; color: var(--text-muted); text-align: center; }
+  .player-roster-row input { background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--text-primary); font-family: var(--font-main); font-size: 12px; padding: 2px 4px; width: 100%; }
+  .player-roster-row input:focus { outline: none; border-bottom-color: var(--active-color); }
+  .player-roster-row .jersey-input { text-align: center; font-weight: bold; }
+  .remove-player-btn { background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; opacity: 0.6; }
+  .remove-player-btn:hover { opacity: 1; }
+  input[type="color"] { cursor: pointer; }
+  @media (max-width: 700px) { .teams-layout { grid-template-columns: 1fr; } .player-roster-row { grid-template-columns: 24px 70px 1fr 24px; } }
+
   /* ===================== SUMMARY VIEW ===================== */
   .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
@@ -741,6 +763,7 @@
     <button class="nav-tab" onclick="switchView('game')">Game</button>
     <button class="nav-tab" onclick="switchView('court')">Court</button>
     <button class="nav-tab" onclick="switchView('summary')">Summary</button>
+    <button class="nav-tab" onclick="switchView('teams')">Teams</button>
   </div>
 </div>
 
@@ -792,18 +815,60 @@
       <!-- TEAM A -->
       <div class="setup-panel">
         <h3 class="team-a-h">Team A</h3>
+        <div class="field-row">
+          <label>Load Saved Team</label>
+          <select id="teamA-saved-select" onchange="loadSavedTeamIntoSetup('A', this.value)" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:6px 8px;font-family:var(--font-main);font-size:13px">
+            <option value="">— Manual Entry —</option>
+          </select>
+        </div>
         <div class="field-row"><label>Team Name</label><input id="teamA-name" value="Team A" placeholder="Team name"/></div>
         <div class="field-row"><label>Libero Jersey #</label><input id="teamA-libero" type="number" value="0" placeholder="0 = none"/></div>
-        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:10px;margin-bottom:4px">Player Jerseys (Pos 1–6)</div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:10px;margin-bottom:4px">Starting Lineup — Pos 1–6</div>
+        <div style="font-size:9px;color:var(--text-muted);margin-bottom:6px">Tap a cell: pick from roster or type manually</div>
         <div class="players-setup" id="teamA-players"></div>
       </div>
       <!-- TEAM B -->
       <div class="setup-panel">
         <h3 class="team-b-h">Team B</h3>
+        <div class="field-row">
+          <label>Load Saved Team</label>
+          <select id="teamB-saved-select" onchange="loadSavedTeamIntoSetup('B', this.value)" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:6px 8px;font-family:var(--font-main);font-size:13px">
+            <option value="">— Manual Entry —</option>
+          </select>
+        </div>
         <div class="field-row"><label>Team Name</label><input id="teamB-name" value="Team B" placeholder="Team name"/></div>
         <div class="field-row"><label>Libero Jersey #</label><input id="teamB-libero" type="number" value="0" placeholder="0 = none"/></div>
-        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:10px;margin-bottom:4px">Player Jerseys (Pos 1–6)</div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:10px;margin-bottom:4px">Starting Lineup — Pos 1–6</div>
+        <div style="font-size:9px;color:var(--text-muted);margin-bottom:6px">Tap a cell: pick from roster or type manually</div>
         <div class="players-setup" id="teamB-players"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TEAMS VIEW ===================== -->
+<div id="view-teams" class="view">
+  <div style="max-width:960px;margin:0 auto">
+    <div class="setup-header">
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Team Management</div>
+        <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Saved Team Compositions</div>
+      </div>
+      <button class="btn-big btn-success" onclick="createNewTeam()">+ New Team</button>
+    </div>
+
+    <div class="teams-layout">
+      <!-- Left: team list -->
+      <div class="teams-list-panel">
+        <div class="panel-title">Saved Teams</div>
+        <div id="teams-list-items">
+          <div style="font-size:12px;color:var(--text-muted)">No teams saved yet. Press + New Team to start.</div>
+        </div>
+      </div>
+
+      <!-- Right: editor -->
+      <div class="team-editor-panel" id="team-editor-panel">
+        <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:24px 0">Select a team on the left, or create a new one.</div>
       </div>
     </div>
   </div>
@@ -1146,10 +1211,10 @@
 <script>
 // ===================== STATE =====================
 let state = {
-  teamA: { name: 'Team A', roster: [1,2,3,4,5,6], libero: 0,
+  teamA: { name: 'Team A', roster: [1,2,3,4,5,6], fullSquad: [], libero: 0,
     rotation: [1,2,3,4,5,6], timeouts: 2, subsUsed: 0, subsLog: [],
     totalPts: 0, setsWon: 0, toUsed: 0, totalSubs: 0 },
-  teamB: { name: 'Team B', roster: [1,2,3,4,5,6], libero: 0,
+  teamB: { name: 'Team B', roster: [1,2,3,4,5,6], fullSquad: [], libero: 0,
     rotation: [1,2,3,4,5,6], timeouts: 2, subsUsed: 0, subsLog: [],
     totalPts: 0, setsWon: 0, toUsed: 0, totalSubs: 0 },
   scoreA: 0, scoreB: 0,
@@ -1255,6 +1320,304 @@ function getCourtLayoutForTeam(team) {
   return TEAM_LAYOUTS[layoutTeam];
 }
 
+// ===================== TEAM COMPOSITIONS =====================
+const TEAMS_STORAGE_KEY = 'volleyref-team-compositions';
+// Team colors now use native <input type="color"> picker
+
+let editingTeamId = null;
+
+function loadAllTeams() {
+  try {
+    return JSON.parse(localStorage.getItem(TEAMS_STORAGE_KEY) || '[]');
+  } catch(e) { return []; }
+}
+
+function saveAllTeams(teams) {
+  localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(teams));
+}
+
+function generateTeamId() {
+  return 'team-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+}
+
+// ── Teams list (left panel) ──
+function renderTeamsList() {
+  const teams = loadAllTeams();
+  const el = document.getElementById('teams-list-items');
+  if (!el) return;
+  if (teams.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">No teams saved yet. Press + New Team to start.</div>';
+    return;
+  }
+  el.innerHTML = teams.map(t => `
+    <div class="team-list-item${editingTeamId === t.id ? ' active' : ''}" onclick="openTeamEditor('${t.id}')">
+      <div class="team-color-dot" style="background:${t.color || '#888'}"></div>
+      <div class="team-list-name">${escHtml(t.name || 'Unnamed')}</div>
+      <div class="team-list-count">${(t.players || []).length}p</div>
+    </div>`).join('');
+}
+
+// ── Refresh the "Load Saved Team" dropdowns on Setup tab ──
+function refreshSetupDropdowns() {
+  const teams = loadAllTeams();
+  ['A','B'].forEach(slot => {
+    const sel = document.getElementById('team' + slot + '-saved-select');
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— Manual Entry —</option>' +
+      teams.map(t => `<option value="${t.id}"${t.id === current ? ' selected' : ''}>${escHtml(t.name)}</option>`).join('');
+  });
+}
+
+// ── Open / create editor ──
+function createNewTeam() {
+  const teams = loadAllTeams();
+  const newTeam = {
+    id: generateTeamId(),
+    name: 'New Team',
+    color: TEAM_COLORS[teams.length % TEAM_COLORS.length],
+    players: []
+  };
+  teams.push(newTeam);
+  saveAllTeams(teams);
+  editingTeamId = newTeam.id;
+  renderTeamsList();
+  renderTeamEditor(newTeam.id);
+}
+
+function openTeamEditor(id) {
+  editingTeamId = id;
+  renderTeamsList();
+  renderTeamEditor(id);
+}
+
+function renderTeamEditor(id) {
+  const panel = document.getElementById('team-editor-panel');
+  if (!panel) return;
+  const teams = loadAllTeams();
+  const team = teams.find(t => t.id === id);
+  if (!team) { panel.innerHTML = '<div style="color:var(--text-muted);padding:24px 0;text-align:center">Team not found.</div>'; return; }
+
+  const rows = (team.players || []).map((p, i) => `
+    <div class="player-roster-row">
+      <div class="row-num">${i + 1}</div>
+      <input class="jersey-input" type="number" min="0" max="99" value="${p.jersey}" placeholder="#" oninput="updatePlayerField('${id}',${i},'jersey',this.value)" style="width:100%"/>
+      <input type="text" value="${escHtml(p.name)}" placeholder="Player name" oninput="updatePlayerField('${id}',${i},'name',this.value)" style="width:100%"/>
+      <button class="remove-player-btn" onclick="removePlayer('${id}',${i})">✕</button>
+    </div>`).join('');
+
+  panel.innerHTML = `
+    <div class="team-editor-header">
+      <div style="font-family:var(--font-display);font-size:17px;color:${team.color || 'var(--court-line)'}">${escHtml(team.name || 'Unnamed')}</div>
+      <button class="resource-btn btn-danger" onclick="deleteTeam('${id}')">Delete Team</button>
+    </div>
+
+    <div class="field-row" style="margin-bottom:12px">
+      <label>Team Name</label>
+      <input id="te-name" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:6px 8px;font-family:var(--font-main);font-size:13px"
+        value="${escHtml(team.name)}" oninput="updateTeamName('${id}',this.value)" placeholder="Team name"/>
+    </div>
+
+    <div class="field-row" style="margin-bottom:14px">
+      <label>Team Color</label>
+      <input type="color" id="te-color" value="${team.color || '#00c2fd'}"
+        style="width:100%;height:36px;border:1px solid var(--border);background:var(--bg-dark);cursor:pointer;padding:2px 4px;"
+        oninput="setTeamColor('${id}',this.value)"/>
+    </div>
+
+    <div class="panel-title">Roster (${(team.players || []).length} players)</div>
+    <div style="display:grid;grid-template-columns:28px 80px 1fr 28px;gap:6px;padding:4px 8px;margin-bottom:2px">
+      <div></div>
+      <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Jersey</div>
+      <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Name</div>
+      <div></div>
+    </div>
+    <div class="player-roster-grid" id="roster-rows">${rows}</div>
+    ${team.players.length === 0 ? '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">No players yet.</div>' : ''}
+    <button class="resource-btn btn-success" style="margin-top:10px;width:100%;padding:8px" onclick="addPlayer('${id}')">+ Add Player</button>
+  `;
+}
+
+// ── Field mutations (save immediately on every keystroke) ──
+function updateTeamName(id, val) {
+  const teams = loadAllTeams();
+  const team = teams.find(t => t.id === id);
+  if (!team) return;
+  team.name = val;
+  saveAllTeams(teams);
+  renderTeamsList();
+  refreshSetupDropdowns();
+  const header = document.querySelector('#team-editor-panel .team-editor-header div');
+  if (header) { header.textContent = val || 'Unnamed'; header.style.color = team.color || 'var(--court-line)'; }
+}
+
+function setTeamColor(id, color) {
+  const teams = loadAllTeams();
+  const team = teams.find(t => t.id === id);
+  if (!team) return;
+  team.color = color;
+  saveAllTeams(teams);
+  renderTeamsList();
+  renderTeamEditor(id);
+}
+
+function updatePlayerField(id, idx, field, val) {
+  const teams = loadAllTeams();
+  const team = teams.find(t => t.id === id);
+  if (!team || !team.players[idx]) return;
+  if (field === 'jersey') team.players[idx].jersey = parseInt(val, 10) || 0;
+  else team.players[idx][field] = val;
+  saveAllTeams(teams);
+  const countEl = document.querySelector('#team-editor-panel .panel-title');
+  if (countEl) countEl.textContent = `Roster (${team.players.length} players)`;
+}
+
+function addPlayer(id) {
+  const teams = loadAllTeams();
+  const team = teams.find(t => t.id === id);
+  if (!team) return;
+  team.players.push({ jersey: 0, name: '' });
+  saveAllTeams(teams);
+  renderTeamEditor(id);
+  renderTeamsList();
+}
+
+function removePlayer(id, idx) {
+  const teams = loadAllTeams();
+  const team = teams.find(t => t.id === id);
+  if (!team) return;
+  team.players.splice(idx, 1);
+  saveAllTeams(teams);
+  renderTeamEditor(id);
+  renderTeamsList();
+}
+
+function deleteTeam(id) {
+  showModal('Delete Team', 'This will permanently delete this team composition. Are you sure?',
+    [{ label: 'Cancel', cls: 'btn-neutral', fn: closeModal },
+     { label: 'Delete', cls: 'btn-danger', fn: () => {
+       const teams = loadAllTeams().filter(t => t.id !== id);
+       saveAllTeams(teams);
+       editingTeamId = null;
+       closeModal();
+       renderTeamsList();
+       refreshSetupDropdowns();
+       const panel = document.getElementById('team-editor-panel');
+       if (panel) panel.innerHTML = '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:24px 0">Select a team on the left, or create a new one.</div>';
+     }}
+  ]);
+}
+
+// ── Load saved team into Setup tab ──
+// Store full squad keyed by slot so startGame can pick it up
+const _pendingFullSquad = { A: [], B: [] };
+
+function loadSavedTeamIntoSetup(slot, teamId) {
+  if (!teamId) {
+    _pendingFullSquad[slot] = [];
+    buildSetupPositionCells(slot, []);
+    return;
+  }
+  const teams = loadAllTeams();
+  const team = teams.find(t => t.id === teamId);
+  if (!team) return;
+
+  // Stash full squad so startGame can save it into state
+  _pendingFullSquad[slot] = (team.players || []).map(p => String(p.jersey));
+
+  // Fill team name
+  const nameEl = document.getElementById('team' + slot + '-name');
+  if (nameEl) nameEl.value = team.name;
+
+  // Rebuild position cells with roster-aware datalist
+  buildSetupPositionCells(slot, team.players || []);
+
+  // Auto-detect libero
+  const liberoPlayer = (team.players || []).find(p => p.libero);
+  if (liberoPlayer) {
+    const libEl = document.getElementById('team' + slot + '-libero');
+    if (libEl) libEl.value = liberoPlayer.jersey;
+  }
+}
+
+// ── Build position cells: each is a select + optional manual override ──
+// jersey stored/read as string so "06" != "6"
+function jerseyStr(v) { return String(v).trim(); }
+
+function buildSetupPositionCells(slot, roster) {
+  const container = document.getElementById('team' + slot + '-players');
+  if (!container) return;
+  container.innerHTML = '';
+  const listId = 'roster-list-' + slot;
+
+  // Build a shared datalist for this slot
+  let dl = document.getElementById(listId);
+  if (dl) dl.remove();
+  dl = document.createElement('datalist');
+  dl.id = listId;
+  roster.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = jerseyStr(p.jersey);
+    opt.label = '#' + jerseyStr(p.jersey) + ' ' + (p.name || '');
+    dl.appendChild(opt);
+  });
+  container.appendChild(dl);
+
+  for (let i = 1; i <= 6; i++) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+
+    const label = document.createElement('div');
+    label.className = 'player-num-label';
+    label.textContent = 'Pos ' + i;
+
+    // Single input with datalist — works as both free-text and dropdown
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.inputMode = 'numeric';
+    inp.className = 'player-num-input';
+    inp.id = 'p' + slot + i;
+    inp.placeholder = '#';
+    inp.autocomplete = 'off';
+    if (roster.length > 0) inp.setAttribute('list', listId);
+
+    // Fix 2: on change, clear other positions in same slot that have same value
+    inp.addEventListener('blur', () => deduplicateSetupSlot(slot, i));
+
+    wrap.appendChild(label);
+    wrap.appendChild(inp);
+    container.appendChild(wrap);
+  }
+}
+
+// Fix 2: if position i just got value X, clear any other position in same slot that already had X
+function deduplicateSetupSlot(slot, changedPos) {
+  const changedEl = document.getElementById('p' + slot + changedPos);
+  if (!changedEl) return;
+  const val = changedEl.value.trim();
+  if (val === '' || val === '0') return;
+  for (let j = 1; j <= 6; j++) {
+    if (j === changedPos) continue;
+    const other = document.getElementById('p' + slot + j);
+    if (other && other.value.trim() === val) {
+      other.value = '';
+    }
+  }
+}
+
+// Fix 3: read jersey as string (preserves leading zeros like "06" vs "6")
+function getPositionJersey(slot, i) {
+  const el = document.getElementById('p' + slot + i);
+  if (!el) return String(i);
+  return el.value.trim() || String(i);
+}
+
+function syncPositionInput(slot, i) { /* no-op */ }
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 // ===================== SETUP =====================
 function initSetupUI() {
   const setsToWinEl = document.getElementById('sets-to-win');
@@ -1268,15 +1631,9 @@ function initSetupUI() {
   updatePointsPerSetInfo();
 
   ['A','B'].forEach(t => {
-    const el = document.getElementById('team'+t+'-players');
-    el.innerHTML = '';
-    for (let i = 1; i <= 6; i++) {
-      const div = document.createElement('div');
-      div.innerHTML = `<div class="player-num-label">Pos ${i}</div>
-        <input class="player-num-input" type="number" id="p${t}${i}" value="${i}" min="0" step="1"/>`;
-      el.appendChild(div);
-    }
+    buildSetupPositionCells(t, []); // plain inputs until a saved team is loaded
   });
+  refreshSetupDropdowns();
 
   ['A', 'B'].forEach(t => {
     const el = document.getElementById('next-team' + t + '-players');
@@ -1284,8 +1641,12 @@ function initSetupUI() {
     for (let i = 1; i <= 6; i++) {
       const div = document.createElement('div');
       div.innerHTML = `<div class="player-num-label">Pos ${i}</div>
-        <input class="player-num-input" type="number" id="n${t}${i}" value="${i}" min="0" step="1"/>`;
+        <input class="player-num-input" type="text" inputmode="numeric" id="n${t}${i}" value="${i}" placeholder="#" autocomplete="off"/>`;
       el.appendChild(div);
+      const inp = div.querySelector('input');
+      const pos = i;
+      const team = t;
+      inp.addEventListener('blur', () => deduplicateNextSetSlot(team, pos));
     }
   });
 }
@@ -1304,13 +1665,16 @@ function startGame() {
 
   let rA = [], rB = [];
   for (let i = 1; i <= 6; i++) {
-    rA.push(parseInt(document.getElementById('pA'+i).value) || i);
-    rB.push(parseInt(document.getElementById('pB'+i).value) || i);
+    const ja = getPositionJersey('A', i); rA.push(ja !== '' ? ja : String(i));
+    const jb = getPositionJersey('B', i); rB.push(jb !== '' ? jb : String(i));
   }
   state.teamA.roster = [...rA];
   state.teamB.roster = [...rB];
   state.teamA.rotation = [...rA];
   state.teamB.rotation = [...rB];
+  // Persist full squad for use in New Set config dropdown
+  state.teamA.fullSquad = _pendingFullSquad.A.length > 0 ? [..._pendingFullSquad.A] : [...rA];
+  state.teamB.fullSquad = _pendingFullSquad.B.length > 0 ? [..._pendingFullSquad.B] : [...rB];
   state.teamA.totalPts = 0;
   state.teamB.totalPts = 0;
   state.teamA.setsWon = 0;
@@ -1717,9 +2081,33 @@ function openSetConfigModal() {
   document.getElementById('set-config-validation-msg').textContent = '';
 
   ['A', 'B'].forEach(team => {
-    const rotation = getTeamState(team).rotation;
+    const t = getTeamState(team);
+    const rotation = t.rotation;
+    const container = document.getElementById('next-team' + team + '-players');
+    if (!container) return;
+
+    // Build datalist from full roster (all jerseys that have ever been in this team)
+    const listId = 'next-roster-list-' + team;
+    let dl = document.getElementById(listId);
+    if (dl) dl.remove();
+    dl = document.createElement('datalist');
+    dl.id = listId;
+    // fullSquad = complete squad from Teams tab; falls back to current rotation
+    const pool = (t.fullSquad && t.fullSquad.length > 0) ? t.fullSquad : (t.roster || rotation);
+    pool.forEach(jersey => {
+      const opt = document.createElement('option');
+      opt.value = String(jersey);
+      dl.appendChild(opt);
+    });
+    container.appendChild(dl);
+
+    // Wire datalist to each input and set current rotation value
     rotation.forEach((jersey, idx) => {
-      document.getElementById('n' + team + (idx + 1)).value = jersey;
+      const inp = document.getElementById('n' + team + (idx + 1));
+      if (inp) {
+        inp.setAttribute('list', listId);
+        inp.value = String(jersey);
+      }
     });
   });
 
@@ -1733,15 +2121,30 @@ function closeSetConfigModal() {
 function readNextSetLineup(team) {
   const jerseys = [];
   for (let i = 1; i <= 6; i++) {
-    const value = parseInt(document.getElementById('n' + team + i).value, 10);
-    if (!Number.isInteger(value) || value < 0) return null;
-    jerseys.push(value);
+    const el = document.getElementById('n' + team + i);
+    const raw = el ? el.value.trim() : '';
+    if (raw === '') return null;
+    jerseys.push(raw); // keep as string — "06" !== "6"
   }
   return jerseys;
 }
 
 function validateUniqueLineup(lineup) {
-  return new Set(lineup).size === lineup.length;
+  // string comparison so "06" and "6" are different
+  return new Set(lineup.map(String)).size === lineup.length;
+}
+
+// Fix 3 + 2: deduplicate new-set config inputs
+function deduplicateNextSetSlot(team, changedPos) {
+  const changedEl = document.getElementById('n' + team + changedPos);
+  if (!changedEl) return;
+  const val = changedEl.value.trim();
+  if (val === '') return;
+  for (let j = 1; j <= 6; j++) {
+    if (j === changedPos) continue;
+    const other = document.getElementById('n' + team + j);
+    if (other && other.value.trim() === val) other.value = '';
+  }
 }
 
 function confirmNextSetSetup() {
@@ -2183,6 +2586,8 @@ function switchView(name) {
   });
   if (name === 'summary') updateSummary();
   if (name === 'court') { renderCourt(); updateCourtScores(); renderPlayerStats(); }
+  if (name === 'teams') { renderTeamsList(); if (editingTeamId) renderTeamEditor(editingTeamId); }
+  if (name === 'setup') refreshSetupDropdowns();
 }
 
 // ===================== RESET =====================
