@@ -118,7 +118,7 @@
   .nav-tab:active { transform: translateY(0); }
 
   /* ===================== VIEWS ===================== */
-  .view { display: none; padding: 16px; }
+  .view { display: none; padding: 16px; animation: fadeIn 0.40s ease forwards; }
   .view.active { display: block; }
 
   /* ===================== SCORE HEADER ===================== */
@@ -886,6 +886,10 @@
 
   @keyframes modalIn {
     to { transform: translateY(0) scale(1); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1;  transform: translateY(0); }
   }
 
   @media (prefers-reduced-motion: reduce) {
