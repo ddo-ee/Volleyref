@@ -22,6 +22,8 @@
     --bg-card: rgb(26, 37, 58, 0.6);
     --text-primary: #f0ede62f;
     --text-secondary: #9ab09a;
+    --text-input_field: #9b9b9b;
+    --text-option: #f0ede6;
     --text-muted: #10b1a9;
     --border: rgb(255, 255, 255, 0.08);
     --danger: #e04040;
@@ -63,9 +65,9 @@
   }
   /* ===================== TOP BAR ===================== */
   #topbar {
-    background: rgba(20,24,42,0.86);
-    backdrop-filter: blur(16px) saturate(1.18);
-    -webkit-backdrop-filter: blur(16px) saturate(1.18);
+    background: rgba(20,24,42,0.65);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
     border-bottom: 1px solid var(--border);
     padding: 10px 16px;
     display: flex;
@@ -87,21 +89,32 @@
   #topbar .logo span { color: var(--team-a-dark); }
   #nav-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
   .nav-tab {
-    padding: 7px 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: rgba(255,255,255,0.025);
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    background: transparent;
     color: var(--text-secondary);
+    font-weight: 600;
     font-family: var(--font-main);
     font-size: 12px;
     cursor: pointer;
     letter-spacing: 1px;
     text-transform: uppercase;
-    box-shadow: inset 0 1px 0 var(--surface-glow);
-    transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    box-shadow: none;
+    transition: all var(--transition-fast);
   }
-  .nav-tab.active { background: var(--court-surface); color: var(--court-line); border-color: var(--active-color); box-shadow: 0 0 0 1px rgba(255,230,0,0.12), inset 0 1px 0 var(--surface-glow); }
-  .nav-tab:hover:not(.active) { color: var(--text-primary); border-color: var(--text-muted); background: rgba(255,255,255,0.055); transform: translateY(-1px); }
+  .nav-tab.active { 
+    background: rgba(255,255,0,0.1);
+    color: var(--active-color); 
+    border-color: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 0 1px rgba(119, 0, 255, 0.12), inset 0 1px 0 var(--surface-glow); 
+  }
+  .nav-tab:hover:not(.active) { 
+    color: var(--text-primary); 
+    border-color: var(--text-muted); 
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-1px); 
+  }
   .nav-tab:active { transform: translateY(0); }
 
   /* ===================== VIEWS ===================== */
@@ -144,12 +157,24 @@
     gap: 12px;
     margin-bottom: 16px;
   }
-  .panel {
-    background: linear-gradient(180deg, var(--surface-soft), rgba(0,0,0,0)) var(--bg-card);
+  .panel,
+  .setup-panel,
+  .teams-list-panel,
+  .team-editor-panel,
+  .last-touch-display,
+  .court-score-card,
+  .team-score-block,
+  #modal-box,
+  #sub-overlay > div,
+  #set-config-overlay > div {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: 14px;
-    box-shadow: var(--shadow-control), inset 0 1px 0 var(--surface-glow);
+    box-shadow: var(--shadow-control);
+    background-image: none; /* Overrides old linear-gradients */
+    padding: 12px 16px;
   }
   .panel-title {
     font-size: 10px;
@@ -171,8 +196,8 @@
     max-height: 180px;
   }
   .pos-cell {
-    background: var(--court-surface);
-    border: 1px solid #2a6a4a;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid transparent;
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
@@ -181,16 +206,26 @@
     font-weight: bold;
     cursor: pointer;
     box-shadow: inset 0 1px 0 var(--surface-glow);
-    transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    transition: all var(--transition-fast);
+    position: relative;
     position: relative;
     flex-direction: column;
     gap: 2px;
     min-height: 42px;
   }
-  .pos-cell:hover { border-color: var(--court-line); transform: translateY(-1px); box-shadow: var(--shadow-control), inset 0 1px 0 var(--surface-glow); }
+  .pos-cell:hover { 
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+  }
   .pos-cell:active { transform: translateY(0); }
-  .pos-cell.libero { background: #1a2a4a; border-color: #3a5a8a; color: #6ab0e0; }
-  .pos-cell.serving { background: #0446d469; border-color: #00bb19; }
+  .pos-cell.libero { 
+    background: rgba(106, 176, 224, 0.15);
+    color: #8ac0e5; 
+  }
+  .pos-cell.serving { 
+    background: #0446d469; 
+    border-color: #00bb19; 
+  }
   .pos-cell .pnum { font-size: 16px; }
   .pos-cell .plabel { font-size: 9px; color: var(--text-muted); letter-spacing: 1px; }
   .pos-num-label {
@@ -219,6 +254,12 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 3px 10px rgba(0,0,0,0.18);
     transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
   }
+
+  .btn-big, .resource-btn, #score-confirm-btn {
+    border: 1px solid transparent; /* Borderless */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    font-weight: 600;
+  }
   .dot:hover { transform: scale(1.08); }
   .dot:active { transform: scale(0.96); }
   .dot.used-a { background: var(--team-a); border-color: var(--team-a-dark); }
@@ -228,15 +269,15 @@
     font-family: var(--font-main);
     font-size: 10px;
     padding: 6px 11px;
-    border: 1px solid;
     border-radius: var(--radius-sm);
     cursor: pointer;
-    background: rgba(255,255,255,0.025);
+    background: rgba(255,255,255,0.05);
     text-transform: uppercase;
     letter-spacing: 1px;
     box-shadow: inset 0 1px 0 var(--surface-glow);
-    transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+    transition: all var(--transition-fast);
   }
+  
   .resource-btn:hover,
   .btn-big:hover,
   #score-confirm-btn:hover,
@@ -256,32 +297,45 @@
     transform: none;
     box-shadow: none;
   }
-  .btn-a { color: var(--team-a); border-color: var(--team-a); }
-  .btn-a:hover { background: rgba(0,194,253,0.16); }
-  .btn-b { color: var(--team-b); border-color: var(--team-b); }
-  .btn-b:hover { background: rgba(0,207,173,0.16); }
-  .btn-warn { color: var(--warn); border-color: var(--warn); }
-  .btn-warn:hover { background: rgba(224,160,32,0.16); }
-  .btn-danger { color: var(--danger); border-color: var(--danger); }
-  .btn-danger:hover { background: rgba(224,64,64,0.16); }
-  .btn-success { color: var(--success); border-color: var(--success); }
-  .btn-success:hover { background: rgba(0,187,25,0.16); }
-  .btn-neutral { color: var(--text-secondary); border-color: var(--border); }
-  .btn-neutral:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); border-color: var(--text-muted); }
-  .btn-big {
+.btn-big {
     font-family: var(--font-main);
     font-size: 13px;
     padding: 10px 20px;
-    border: 1px solid;
     border-radius: var(--radius-md);
     cursor: pointer;
-    background: rgba(255,255,255,0.025);
     text-transform: uppercase;
     letter-spacing: 2px;
-    box-shadow: inset 0 1px 0 var(--surface-glow);
-    transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+    transition: all var(--transition-fast);
     display: inline-block;
   }
+
+  .btn-big.btn-a { background: rgba(0, 194, 253, 0.15); color: var(--team-a); }
+  .btn-big.btn-b { background: rgba(0, 207, 173, 0.15); color: var(--team-b); }
+  .btn-big.btn-success, .resource-btn.btn-success { background: rgba(0, 187, 25, 0.15); color: var(--success); }
+  .btn-big.btn-danger, .resource-btn.btn-danger { background: rgba(224, 64, 64, 0.15); color: var(--danger); }
+  .btn-big.btn-warn, .resource-btn.btn-warn { background: rgba(224, 160, 32, 0.15); color: var(--warn); }
+  
+  .resource-btn.btn-a { background: rgba(0, 194, 253, 0.15); color: var(--team-a); }
+  .resource-btn.btn-b { background: rgba(0, 207, 173, 0.15); color: var(--team-b); }
+  .resource-btn.btn-neutral { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
+
+  .btn-big:hover, .resource-btn:hover, #score-confirm-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    filter: brightness(1.2); 
+  }
+  
+  .btn-big:active, .resource-btn:active, #score-confirm-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .btn-big:disabled, .resource-btn:disabled, #score-confirm-btn:disabled {
+    transform: none;
+    box-shadow: none;
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
   .setup-header,
   .summary-header {
     margin-bottom: 16px;
@@ -402,14 +456,15 @@
   }
 
   /* ===================== SUB LOG ===================== */
-  .sub-item {
-    font-size: 11px;
-    padding: 4px 0;
+
+  .sub-item,
+  .log-item,
+  .stat-row,
+  .set-history-row 
+  {
     border-bottom: 1px solid var(--border);
-    color: var(--text-secondary);
+    padding: 8px 6px; 
   }
-  .sub-item .sub-invalid { color: var(--danger); font-size: 10px; }
-  .sub-item .sub-valid { color: var(--success); font-size: 10px; }
 
   /* ===================== SCORE LOG ===================== */
   #score-log {
@@ -564,15 +619,6 @@
 
   /* ===================== SETUP VIEW ===================== */
   .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .setup-panel {
-    background: var(--bg-card);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 20px;
-    box-shadow: var(--shadow-control);
-  }
   .setup-panel h3 {
     font-family: var(--font-display);
     font-size: 16px;
@@ -598,11 +644,20 @@
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid transparent;
     border-radius: var(--radius-sm);
-    color: var(--text-primary);
+    color: var(--text-input_field);
     padding: 10px 12px;
     font-family: var(--font-main);
     font-size: 14px;
-    transition: border-color var(--transition-fast),
+    transition: border-color var(--transition-fast);
+  }
+  .field-row select,
+  select[style] {
+    color: var(--text-option) !important;
+  }
+  .field-row select option,
+  select[style] option {
+    background: var(--bg-panel);
+    color: var(--text-option);
   }
   .field-row input:focus,
   .field-row select:focus,
@@ -618,7 +673,7 @@
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid transparent;
     border-radius: var(--radius-sm);
-    color: var(--text-primary);
+    color: var(--text-input_field);
     padding: 10px 4px;
     font-family: var(--font-main);
     font-size: 14px;
@@ -636,24 +691,132 @@
   }
 
   /* ===================== TEAMS VIEW ===================== */
-  .teams-layout { display: grid; grid-template-columns: minmax(200px, 280px) 1fr; gap: 16px; align-items: start; }
-  .teams-list-panel { background: linear-gradient(180deg, var(--surface-soft), rgba(0,0,0,0)) var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; box-shadow: var(--shadow-control), inset 0 1px 0 var(--surface-glow); }
-  .team-list-item { display: flex; align-items: center; gap: 10px; padding: 10px 11px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: rgba(15,13,31,0.78); margin-bottom: 6px; cursor: pointer; box-shadow: inset 0 1px 0 var(--surface-glow); transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast); }
-  .team-list-item:hover { border-color: var(--text-muted); background: rgba(255,255,255,0.045); transform: translateY(-1px); box-shadow: var(--shadow-control), inset 0 1px 0 var(--surface-glow); }
-  .team-list-item.active { border-color: var(--active-color); background: var(--bg-panel); }
-  .team-color-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-  .team-list-name { font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .team-list-count { font-size: 10px; color: var(--text-muted); }
-  .team-editor-panel { background: linear-gradient(180deg, var(--surface-soft), rgba(0,0,0,0)) var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; box-shadow: var(--shadow-control), inset 0 1px 0 var(--surface-glow); }
-  .team-editor-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-  .player-roster-grid { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 10px; }
-  .player-roster-row { display: grid; grid-template-columns: 28px 80px 1fr 28px; gap: 6px; align-items: center; background: rgba(15,13,31,0.78); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 8px; box-shadow: inset 0 1px 0 var(--surface-glow); }
-  .player-roster-row .row-num { font-size: 10px; color: var(--text-muted); text-align: center; }
-  .player-roster-row input { background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--text-primary); font-family: var(--font-main); font-size: 12px; padding: 2px 4px; width: 100%; }
-  .player-roster-row input:focus { outline: none; border-bottom-color: var(--active-color); box-shadow: none; }
-  .player-roster-row .jersey-input { text-align: center; font-weight: bold; }
-  .remove-player-btn { background: rgba(224,64,64,0.08); border: 1px solid rgba(224,64,64,0.25); border-radius: var(--radius-sm); color: var(--danger); cursor: pointer; font-size: 14px; line-height: 1; padding: 4px 0; opacity: 0.75; transition: opacity var(--transition-fast), background var(--transition-fast), transform var(--transition-fast); }
-  .remove-player-btn:hover { opacity: 1; background: rgba(224,64,64,0.16); transform: translateY(-1px); }
+  .teams-layout { 
+    display: grid; 
+    grid-template-columns: minmax(200px, 280px) 1fr; 
+    gap: 16px; 
+    align-items: start; }
+
+  .teams-list-panel { 
+    background: linear-gradient(180deg, var(--surface-soft), rgba(0,0,0,0)) var(--bg-card); 
+    border: 1px solid var(--border); 
+    border-radius: var(--radius-md); 
+    padding: 14px; box-shadow: var(--shadow-control), inset 0 1px 0 var(--surface-glow); 
+  }
+  .team-list-item { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    padding: 10px 11px; 
+    border: 1px solid transparent; 
+    border-radius: var(--radius-sm); 
+    background: rgba(0,0,0,0.2); 
+    margin-bottom: 8px; 
+    cursor: pointer; 
+    box-shadow: inset 0 1px 0 var(--surface-glow); 
+    transition: all var(--transition-fast);
+  }
+  .team-list-item:hover { 
+    background: rgba(255,255,255,0.06); 
+    transform: translateY(-1px); 
+    box-shadow: var(--shadow-control), inset 0 1px 0 var(--surface-glow); 
+  }
+  .team-list-item.active { 
+    border-color: var(--active-color); 
+    background: rgba(255,255,255,0.1); 
+    border: 1px solid var(--border);
+  }
+  .team-color-dot { 
+    width: 12px; 
+    height: 12px; 
+    border-radius: 50%; 
+    flex-shrink: 0; 
+  }
+  .team-list-name { 
+    font-size: 13px; 
+    flex: 1; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+  }
+  .team-list-count { 
+    font-size: 10px; 
+    color: var(--text-muted); 
+  }
+  .team-editor-panel { 
+    background: linear-gradient(180deg, var(--surface-soft), rgba(0,0,0,0)) var(--bg-card); 
+    border: 1px solid var(--border); 
+    border-radius: var(--radius-md); 
+    padding: 16px; 
+    box-shadow: var(--shadow-control), inset 0 1px 0 var(--surface-glow); 
+  }
+  .team-editor-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    gap: 10px; 
+    margin-bottom: 14px; 
+    flex-wrap: wrap;
+   }
+  .player-roster-grid { 
+    display: grid; 
+    grid-template-columns: 1fr; 
+    gap: 6px; 
+    margin-top: 10px; 
+  }
+  .player-roster-row { 
+    display: grid; 
+    grid-template-columns: 28px 80px 1fr 28px; 
+    gap: 6px; 
+    align-items: center; 
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid transparent; 
+    border-radius: var(--radius-sm); 
+    padding: 7px 8px; 
+    box-shadow: inset 0 1px 0 var(--surface-glow); 
+  }
+  .player-roster-row .row-num { 
+    font-size: 10px; 
+    color: var(--text-muted); 
+    text-align: center; 
+  }
+  .player-roster-row input { 
+    background: transparent; 
+    border: none; 
+    border-bottom: 1px solid transparent; 
+    color: var(--text-primary); 
+    font-family: var(--font-main); 
+    font-size: 12px; 
+    padding: 2px 4px; 
+    width: 100%;
+    transition: all var(--transition-fast);
+   }
+  .player-roster-row input:focus { 
+    outline: none; 
+    border-bottom-color: var(--active-color); 
+    box-shadow: none; 
+  }
+  .player-roster-row .jersey-input { 
+    text-align: center; 
+    font-weight: bold; 
+  }
+  .remove-player-btn { 
+    background: rgba(224,64,64,0.08); 
+    border: 1px solid rgba(224,64,64,0.25); 
+    border-radius: var(--radius-sm); 
+    color: var(--danger); 
+    cursor: pointer; 
+    font-size: 14px; 
+    line-height: 1; 
+    padding: 4px 0; 
+    opacity: 0.75; 
+    transition: opacity var(--transition-fast), background var(--transition-fast), transform var(--transition-fast); 
+  }
+  .remove-player-btn:hover { 
+    opacity: 1; 
+    background: rgba(224,64,64,0.16); 
+    transform: translateY(-1px); 
+  }
   input[type="color"] { cursor: pointer; border-radius: var(--radius-sm) !important; }
   @media (max-width: 700px) { .teams-layout { grid-template-columns: 1fr; } .player-roster-row { grid-template-columns: 24px 70px 1fr 24px; } }
 
@@ -783,7 +946,7 @@
       padding-bottom: 4px;
     }
     #view-game .team-score-block {
-      padding: 6px 8px;
+      padding: 16px 20px;
     }
     #view-game .team-name-label {
       font-size: 8px;
@@ -1573,7 +1736,7 @@ function renderTeamEditor(id) {
   const rows = (team.players || []).map((p, i) => `
     <div class="player-roster-row">
       <div class="row-num">${i + 1}</div>
-      <input class="jersey-input" type="number" min="0" max="99" value="${p.jersey}" placeholder="#" oninput="updatePlayerField('${id}',${i},'jersey',this.value)" style="width:100%"/>
+      <input class="jersey-input" type="number" min="0" max="999" value="${p.jersey}" placeholder=" " oninput="updatePlayerField('${id}',${i},'jersey',this.value)" style="width:100%"/>
       <input type="text" value="${escHtml(p.name)}" placeholder="Player name" oninput="updatePlayerField('${id}',${i},'name',this.value)" style="width:100%"/>
       <button class="remove-player-btn" onclick="removePlayer('${id}',${i})">✕</button>
     </div>`).join('');
@@ -1750,7 +1913,7 @@ function buildSetupPositionCells(slot, roster) {
     inp.inputMode = 'numeric';
     inp.className = 'player-num-input';
     inp.id = 'p' + slot + i;
-    inp.placeholder = '#';
+    inp.placeholder = '';
     inp.autocomplete = 'off';
     if (roster.length > 0) inp.setAttribute('list', listId);
 
@@ -1814,7 +1977,7 @@ function initSetupUI() {
     for (let i = 1; i <= 6; i++) {
       const div = document.createElement('div');
       div.innerHTML = `<div class="player-num-label">Pos ${i}</div>
-        <input class="player-num-input" type="text" inputmode="numeric" id="n${t}${i}" value="${i}" placeholder="#" autocomplete="off"/>`;
+        <input class="player-num-input" type="text" inputmode="numeric" id="n${t}${i}" value="${i}" placeholder=" " autocomplete="off"/>`;
       el.appendChild(div);
       const inp = div.querySelector('input');
       const pos = i;
