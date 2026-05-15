@@ -682,6 +682,42 @@
     width: 100%;
     transition: all var(--transition-fast);
   }
+  .setup-player-picker {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .setup-player-picker .player-num-input {
+    padding-right: 30px;
+  }
+  .player-picker-trigger {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    width: 24px;
+    height: calc(100% - 8px);
+    min-height: 24px;
+    transform: translateY(-50%);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+    color: var(--text-option);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast);
+  }
+  .player-picker-trigger:hover,
+  .player-picker-trigger:focus-visible {
+    background: rgba(255,255,255,0.14);
+    border-color: rgba(255,255,255,0.18);
+  }
+  .player-picker-trigger:active {
+    transform: translateY(-50%) scale(0.96);
+  }
   .player-num-label { 
     font-size: 10px; 
     font-weight: 500;
@@ -1917,7 +1953,7 @@ function buildSetupPositionCells(slot, roster) {
     inp.inputMode = 'numeric';
     inp.className = 'player-num-input';
     inp.id = 'p' + slot + i;
-    inp.placeholder = '';
+    inp.placeholder = roster.length > 0 ? 'Pick' : '';
     inp.autocomplete = 'off';
     if (roster.length > 0) inp.setAttribute('list', listId);
 
@@ -1925,7 +1961,29 @@ function buildSetupPositionCells(slot, roster) {
     inp.addEventListener('blur', () => deduplicateSetupSlot(slot, i));
 
     wrap.appendChild(label);
-    wrap.appendChild(inp);
+    if (roster.length > 0) {
+      const pickerWrap = document.createElement('div');
+      pickerWrap.className = 'setup-player-picker';
+
+      const pickerBtn = document.createElement('button');
+      pickerBtn.type = 'button';
+      pickerBtn.className = 'player-picker-trigger';
+      pickerBtn.textContent = 'v';
+      pickerBtn.setAttribute('aria-label', 'Choose player for position ' + i);
+      pickerBtn.addEventListener('pointerdown', e => e.preventDefault());
+      pickerBtn.addEventListener('click', () => {
+        inp.focus();
+        if (typeof inp.showPicker === 'function') {
+          try { inp.showPicker(); } catch (err) {}
+        }
+      });
+
+      pickerWrap.appendChild(inp);
+      pickerWrap.appendChild(pickerBtn);
+      wrap.appendChild(pickerWrap);
+    } else {
+      wrap.appendChild(inp);
+    }
     container.appendChild(wrap);
   }
 }
