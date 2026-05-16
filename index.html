@@ -255,7 +255,7 @@
     transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
   }
 
-  .btn-big, .resource-btn, #score-confirm-btn {
+  .btn-big, .resource-btn, .court-action-btn {
     border: 1px solid transparent; /* Borderless */
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     font-weight: 600;
@@ -280,20 +280,20 @@
   
   .resource-btn:hover,
   .btn-big:hover,
-  #score-confirm-btn:hover,
+  .court-action-btn:hover,
   #clear-touch-btn:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-control), inset 0 1px 0 var(--surface-glow);
   }
   .resource-btn:active,
   .btn-big:active,
-  #score-confirm-btn:active,
+  .court-action-btn:active,
   #clear-touch-btn:active {
     transform: translateY(0) scale(0.99);
   }
   .resource-btn:disabled,
   .btn-big:disabled,
-  #score-confirm-btn:disabled {
+  .court-action-btn:disabled {
     transform: none;
     box-shadow: none;
   }
@@ -319,17 +319,17 @@
   .resource-btn.btn-b { background: rgba(0, 207, 173, 0.15); color: var(--team-b); }
   .resource-btn.btn-neutral { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
 
-  .btn-big:hover, .resource-btn:hover, #score-confirm-btn:hover {
+  .btn-big:hover, .resource-btn:hover, .court-action-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     filter: brightness(1.2); 
   }
   
-  .btn-big:active, .resource-btn:active, #score-confirm-btn:active {
+  .btn-big:active, .resource-btn:active, .court-action-btn:active {
     transform: translateY(0) scale(0.98);
   }
 
-  .btn-big:disabled, .resource-btn:disabled, #score-confirm-btn:disabled {
+  .btn-big:disabled, .resource-btn:disabled, .court-action-btn:disabled {
     transform: none;
     box-shadow: none;
     opacity: 0.4;
@@ -570,16 +570,23 @@
   .last-touch-label { font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; }
   .last-touch-val { font-size: 20px; margin-top: 4px; }
 
-  #score-confirm-btn {
+  .court-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .court-action-btn {
     width: 100%;
-    padding: 14px;
+    min-height: 48px;
+    padding: 10px 8px;
     background: rgba(64,192,112,0.1);
     border: 2px solid var(--success);
     border-radius: var(--radius-md);
     color: var(--success);
     font-family: var(--font-main);
-    font-size: 14px;
-    letter-spacing: 2px;
+    font-size: 12px;
+    letter-spacing: 1px;
     text-transform: uppercase;
     cursor: pointer;
     box-shadow: inset 0 1px 0 var(--surface-glow);
@@ -587,8 +594,13 @@
     display: block;
     margin-bottom: 0;
   }
-  #score-confirm-btn:hover { background: rgba(64,192,112,0.25); }
-  #score-confirm-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .court-action-btn:hover { background: rgba(64,192,112,0.25); }
+  .court-action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .court-action-btn.error-action {
+    background: rgba(224,64,64,0.1);
+    border-color: var(--danger);
+    color: var(--danger);
+  }
 
   #clear-touch-btn {
     width: 100%;
@@ -1187,6 +1199,74 @@
     background: rgba(106, 176, 224, 0.25);
     border-color: #8ac0e5;
   }
+
+  .efficiency-shell {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .efficiency-toolbar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .efficiency-toolbar label {
+    display: block;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .efficiency-toolbar select {
+    width: 100%;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    color: var(--text-input_field);
+    padding: 9px;
+    font-family: var(--font-main);
+    font-size: 12px;
+  }
+  .skill-mode-grid,
+  .skill-result-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .skill-mode-btn.active {
+    border-color: var(--court-line);
+    color: var(--court-line);
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .skill-result-grid {
+    margin-top: 12px;
+  }
+  .skill-result-btn {
+    min-height: 54px;
+    font-size: 12px;
+  }
+  .efficiency-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .efficiency-table th,
+  .efficiency-table td {
+    border-bottom: 1px solid var(--border);
+    padding: 6px 4px;
+    text-align: right;
+  }
+  .efficiency-table th:first-child,
+  .efficiency-table td:first-child {
+    text-align: left;
+  }
+  @media (max-width: 700px) {
+    .efficiency-toolbar,
+    .skill-mode-grid,
+    .skill-result-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
 </style>
 </head>
 <body>
@@ -1198,7 +1278,8 @@
     <button class="nav-tab active" onclick="switchView('setup')">Setup</button>
     <button class="nav-tab" onclick="switchView('game')">Game</button>
     <button class="nav-tab" onclick="switchView('court')">Court</button>
-    <button class="nav-tab" onclick="switchView('summary')">Summary</button>
+    <button class="nav-tab" onclick="switchView('efficiency')">Skill Efficiency</button>
+    <button class="nav-tab" onclick="switchView('summary')">Statistics</button>
     <button class="nav-tab" onclick="switchView('teams')">Teams</button>
   </div>
 </div>
@@ -1476,9 +1557,14 @@
       </div>
 
       <div style="display:flex;flex-direction:column;gap:6px;";>
-        <button id="score-confirm-btn" onclick="confirmCourtPoint()" disabled>
-          CONFIRM POINT
-        </button>
+        <div class="court-actions-grid">
+          <button class="court-action-btn" data-court-action onclick="recordCourtAction('kill')" disabled>Kill</button>
+          <button class="court-action-btn" data-court-action onclick="recordCourtAction('ace')" disabled>Ace</button>
+          <button class="court-action-btn" data-court-action onclick="recordCourtAction('block')" disabled>Block</button>
+          <button class="court-action-btn error-action" data-court-action onclick="recordCourtAction('attackError')" disabled>Attack Error</button>
+          <button class="court-action-btn error-action" data-court-action onclick="recordCourtAction('serveError')" disabled>Server Error</button>
+          <button class="court-action-btn error-action" data-court-action onclick="recordCourtAction('fault')" disabled>Faults (Violations)</button>
+        </div>
         <div style="display:flex; gap:6px;">
           <button id="clear-touch-btn" onclick="clearTouch()" style="flex:1;">Clear Selection</button>
           <button class="resource-btn btn-warn" onclick="undoLastPoint()" style="flex:1; border: 1px solid var(--warn); padding: 8px; font-size: 11px;">Undo Point</button>
@@ -1502,8 +1588,70 @@
       </div>
 
       <div class="player-stats-panel">
-        <div class="panel-title">Player Stats (Points)</div>
+        <div class="panel-title">Player Stats</div>
         <div id="player-stats" style="max-height:160px;overflow-y:auto;font-size:11px;columns:2;column-gap:12px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SKILL EFFICIENCY VIEW ===================== -->
+<div id="view-efficiency" class="view">
+  <div class="efficiency-shell">
+    <div class="summary-header">
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Technical Committee</div>
+        <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Skill Efficiency</div>
+      </div>
+      <button class="resource-btn btn-warn" onclick="undoLastSkillEfficiency()">Undo Skill Entry</button>
+    </div>
+
+    <div class="panel" style="margin-bottom:12px">
+      <div class="efficiency-toolbar">
+        <div>
+          <label>Team</label>
+          <select id="eff-team" onchange="renderEfficiencyPlayerOptions(); renderEfficiencyTables();">
+            <option value="A">Team A</option>
+            <option value="B">Team B</option>
+          </select>
+        </div>
+        <div>
+          <label>Player</label>
+          <select id="eff-player"></select>
+        </div>
+        <div>
+          <label>Set</label>
+          <select id="eff-set-scope" onchange="renderEfficiencyTables()">
+            <option value="match">Whole Match</option>
+            <option value="current">Current Set</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="skill-mode-grid" id="skill-mode-grid"></div>
+      <div class="skill-result-grid" id="skill-result-grid"></div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="panel">
+        <div class="panel-title">Attack Efficiency</div>
+        <div id="attack-efficiency-table"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Serve Efficiency</div>
+        <div id="serve-efficiency-table"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Reception Efficiency</div>
+        <div id="reception-efficiency-table"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Set Efficiency</div>
+        <div id="set-efficiency-table"></div>
+      </div>
+      <div class="panel" style="grid-column:1 / -1">
+        <div class="panel-title">Recent Skill Entries</div>
+        <div id="skill-efficiency-log" style="max-height:180px;overflow-y:auto;font-size:11px;color:var(--text-secondary)"></div>
       </div>
     </div>
   </div>
@@ -1552,6 +1700,19 @@
         <div>
           <div class="leaderboard-team-title" style="color:var(--team-b)" id="leaderboard-title-b">Team B</div>
           <div id="top-scorers-b"></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Player Skill Stats</div>
+      <div class="leaderboard-split">
+        <div>
+          <div class="leaderboard-team-title" style="color:var(--team-a)" id="skill-stats-title-a">Team A</div>
+          <div id="skill-stats-a"></div>
+        </div>
+        <div>
+          <div class="leaderboard-team-title" style="color:var(--team-b)" id="skill-stats-title-b">Team B</div>
+          <div id="skill-stats-b"></div>
         </div>
       </div>
     </div>
@@ -1673,7 +1834,9 @@ let state = {
   setHistory: [],
   allSubsLog: [],
   pointLog: [],
-  playerPoints: {}, // "A:12" -> points
+  skillEfficiencyLog: [],
+  playerPoints: {}, // "A:12" -> scored points
+  playerStats: {}, // "A:12" -> kills/aces/blocks/errors
   maxSubs: 6,
   setsToWin: 3,
   ptsPerSet: 25,
@@ -1687,6 +1850,7 @@ let state = {
 };
 
 let liberoSelectionMode = null;
+let selectedEfficiencySkill = 'attack';
 
 const TEAM_COLORS = [
   '#00c2fd', // Team A blue
@@ -2191,7 +2355,9 @@ function startGame() {
   state.teamB.totalSubs = 0;
   state.setHistory = [];
   state.allSubsLog = [];
+  state.skillEfficiencyLog = [];
   state.playerPoints = {};
+  state.playerStats = {};
   state.serving = state.firstServer;
   state.currentSet = 1;
   state.matchEnded = false;
@@ -2220,27 +2386,22 @@ function resetSetState() {
   subRegistry = { A: {}, B: {} };
 }
 
-function addPoint(team) {
+function addPoint(team, options = {}) {
   if (!state.gameStarted) { showAlert('Start match first!', 'warn'); return; }
   
-  let scorerInfo = null;
+  const scorerInfo = options.scorerInfo || null;
+  const statEvents = options.statEvents || [];
 
   if (team === 'A') {
     state.scoreA++;
     state.teamA.totalPts++;
-    // Track server/scorer point
-    if (state.lastTouchPlayer && state.lastTouchTeam === 'A') {
-        trackPlayerPoint('A', state.lastTouchPlayer);
-        scorerInfo = { team: 'A', jersey: state.lastTouchPlayer };
-    }
   } else {
     state.scoreB++;
     state.teamB.totalPts++;
-    if (state.lastTouchPlayer && state.lastTouchTeam === 'B') {
-        trackPlayerPoint('B', state.lastTouchPlayer);
-        scorerInfo = { team: 'B', jersey: state.lastTouchPlayer };
-    }
   }
+
+  if (scorerInfo) trackPlayerPoint(scorerInfo.team, scorerInfo.jersey);
+  statEvents.forEach(event => incrementPlayerStat(event.team, event.jersey, event.stat));
 
   let wasServing = state.serving;
   let rotatedTeam = null;
@@ -2259,6 +2420,10 @@ function addPoint(team) {
       team, 
       set: state.currentSet,
       scorerInfo: scorerInfo,
+      statEvents: statEvents,
+      actionType: options.actionType || null,
+      actionLabel: options.actionLabel || null,
+      responsiblePlayer: options.responsiblePlayer || null,
       wasServing: wasServing,
       rotatedTeam: rotatedTeam
   });
@@ -2270,9 +2435,38 @@ function addPoint(team) {
   renderAll();
 }
 
+function getPlayerKey(team, jersey) {
+  return team + ':' + normalizeJerseyValue(jersey);
+}
+
 function trackPlayerPoint(team, jersey) {
-  const key = team + ':' + jersey;
+  const key = getPlayerKey(team, jersey);
   state.playerPoints[key] = (state.playerPoints[key] || 0) + 1;
+}
+
+function ensurePlayerStats(team, jersey) {
+  const key = getPlayerKey(team, jersey);
+  if (!state.playerStats) state.playerStats = {};
+  if (!state.playerStats[key]) {
+    state.playerStats[key] = { kills: 0, aces: 0, blocks: 0, attackErrors: 0, serveErrors: 0, faults: 0 };
+  }
+  return state.playerStats[key];
+}
+
+function incrementPlayerStat(team, jersey, stat) {
+  const stats = ensurePlayerStats(team, jersey);
+  stats[stat] = (stats[stat] || 0) + 1;
+}
+
+function decrementPlayerStat(team, jersey, stat) {
+  if (!state.playerStats) return;
+  const key = getPlayerKey(team, jersey);
+  const stats = state.playerStats[key];
+  if (!stats || !stats[stat]) return;
+  stats[stat]--;
+  if (stats.kills <= 0 && stats.aces <= 0 && stats.blocks <= 0 && stats.attackErrors <= 0 && stats.serveErrors <= 0 && stats.faults <= 0) {
+    delete state.playerStats[key];
+  }
 }
 
 function undoLastPoint() {
@@ -2287,7 +2481,7 @@ function undoLastPoint() {
 
   // 2. Revert Player Score (Statistics)
   if (last.scorerInfo) {
-      const key = last.scorerInfo.team + ':' + last.scorerInfo.jersey;
+      const key = getPlayerKey(last.scorerInfo.team, last.scorerInfo.jersey);
       if (state.playerPoints[key]) {
           state.playerPoints[key]--;
           // Remove the player from the leaderboard if their points drop back to 0
@@ -2296,6 +2490,7 @@ function undoLastPoint() {
           }
       }
   }
+  (last.statEvents || []).forEach(event => decrementPlayerStat(event.team, event.jersey, event.stat));
 
   // 3. Revert Serving & Auto-Rotations
   state.serving = last.wasServing;
@@ -2803,7 +2998,7 @@ function getCourtPositions(team) {
   const orderedPositions = getCourtPositionList(team);
   return rot.map((jersey, i) => ({
     x: orderedPositions[i].x, y: orderedPositions[i].y,
-    jersey, isLibero: jersey === t.libero && t.libero > 0,
+    jersey, isLibero: normalizeJerseyValue(jersey) === normalizeJerseyValue(t.libero) && Number(t.libero) > 0,
     posIdx: i
   }));
 }
@@ -2812,7 +3007,7 @@ function drawPlayerOnCourt(svg, x, y, jersey, team, isLibero) {
   const color = team === 'A' ? '#0057ff' : '#00b86b';
   const liberoColor = '#9060d0';
   const fill = isLibero ? liberoColor : color;
-  const isSelected = state.lastTouchPlayer === jersey && state.lastTouchTeam === team;
+  const isSelected = normalizeJerseyValue(state.lastTouchPlayer) === normalizeJerseyValue(jersey) && state.lastTouchTeam === team;
   const r = 25;
 
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -2851,8 +3046,12 @@ function selectPlayerTouch(jersey, team) {
   document.getElementById('last-touch-val').textContent = '#' + jersey;
   document.getElementById('last-touch-val').style.color = team === 'A' ? 'var(--team-a)' : 'var(--team-b)';
   document.getElementById('last-touch-team').textContent = tName;
-  document.getElementById('score-confirm-btn').disabled = false;
+  setCourtActionButtonsDisabled(false);
   renderCourt();
+}
+
+function setCourtActionButtonsDisabled(disabled) {
+  document.querySelectorAll('[data-court-action]').forEach(btn => { btn.disabled = disabled; });
 }
 
 function clearTouch() {
@@ -2861,13 +3060,38 @@ function clearTouch() {
   document.getElementById('last-touch-val').textContent = '—';
   document.getElementById('last-touch-val').style.color = 'var(--text-primary)';
   document.getElementById('last-touch-team').textContent = 'Tap a player on court';
-  document.getElementById('score-confirm-btn').disabled = true;
+  setCourtActionButtonsDisabled(true);
   renderCourt();
 }
 
-function confirmCourtPoint() {
+const COURT_ACTIONS = {
+  kill: { label: 'Kill', stat: 'kills', pointTo: 'selected' },
+  ace: { label: 'Ace', stat: 'aces', pointTo: 'selected' },
+  block: { label: 'Block', stat: 'blocks', pointTo: 'selected' },
+  attackError: { label: 'Attack Error', stat: 'attackErrors', pointTo: 'opponent' },
+  serveError: { label: 'Server Error', stat: 'serveErrors', pointTo: 'opponent' },
+  fault: { label: 'Fault', stat: 'faults', pointTo: 'opponent' }
+};
+
+function getOpponentTeam(team) {
+  return team === 'A' ? 'B' : 'A';
+}
+
+function recordCourtAction(actionType) {
   if (!state.lastTouchPlayer || !state.lastTouchTeam) return;
-  addPoint(state.lastTouchTeam);
+  const action = COURT_ACTIONS[actionType];
+  if (!action) return;
+  const playerTeam = state.lastTouchTeam;
+  const pointTeam = action.pointTo === 'opponent' ? getOpponentTeam(playerTeam) : playerTeam;
+  const player = normalizeJerseyValue(state.lastTouchPlayer);
+  const scorerInfo = action.pointTo === 'selected' ? { team: playerTeam, jersey: player } : null;
+  addPoint(pointTeam, {
+    scorerInfo,
+    statEvents: [{ team: playerTeam, jersey: player, stat: action.stat }],
+    actionType,
+    actionLabel: action.label,
+    responsiblePlayer: { team: playerTeam, jersey: player }
+  });
   clearTouch();
   updateCourtScores();
   renderPlayerStats();
@@ -2883,16 +3107,241 @@ function updateCourtScores() {
 
 function renderPlayerStats() {
   const el = document.getElementById('player-stats');
-  const entries = Object.entries(state.playerPoints).sort((a,b) => b[1]-a[1]);
-  if (entries.length === 0) { el.innerHTML = '<div style="color:var(--text-muted)">No points yet</div>'; return; }
-  el.innerHTML = entries.map(([key,pts]) => {
+  const entries = Object.entries(state.playerStats || {})
+    .filter(([, stats]) => (stats.kills || 0) + (stats.aces || 0) + (stats.blocks || 0) + (stats.attackErrors || 0) + (stats.serveErrors || 0) + (stats.faults || 0) > 0)
+    .sort((a,b) => {
+      const aScore = (a[1].kills || 0) + (a[1].aces || 0) + (a[1].blocks || 0);
+      const bScore = (b[1].kills || 0) + (b[1].aces || 0) + (b[1].blocks || 0);
+      return bScore - aScore;
+    });
+  if (entries.length === 0) { el.innerHTML = '<div style="color:var(--text-muted)">No player stats yet</div>'; return; }
+  el.innerHTML = entries.map(([key,stats]) => {
     const [team, j] = key.split(':');
     const color = team === 'A' ? 'var(--team-a)' : 'var(--team-b)';
     return `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)">
       <span style="color:${color}">#${j} (${team==='A'?state.teamA.name:state.teamB.name})</span>
-      <span style="font-weight:bold">${pts} pts</span>
+      <span style="font-weight:bold">K ${stats.kills || 0} | A ${stats.aces || 0} | B ${stats.blocks || 0}</span>
     </div>`;
   }).join('');
+}
+
+// ===================== SKILL EFFICIENCY =====================
+const EFFICIENCY_SKILLS = {
+  attack: {
+    label: 'Attack',
+    results: [
+      { value: 'attempt', label: 'Attempt' },
+      { value: 'kill', label: 'Kill' },
+      { value: 'error', label: 'Attack Error' },
+      { value: 'inPlay', label: 'In Play / Continued' }
+    ]
+  },
+  serve: {
+    label: 'Serve',
+    results: [
+      { value: 'attempt', label: 'Serve Attempt' },
+      { value: 'ace', label: 'Ace' },
+      { value: 'error', label: 'Serve Error' },
+      { value: 'inPlay', label: 'In Play' }
+    ]
+  },
+  reception: {
+    label: 'Reception',
+    results: [
+      { value: 'attempt', label: 'Reception Attempt' },
+      { value: 'positive', label: 'Positive Pass' },
+      { value: 'poor', label: 'Poor Pass' },
+      { value: 'error', label: 'Reception Error' }
+    ]
+  },
+  set: {
+    label: 'Set',
+    results: [
+      { value: 'attempt', label: 'Set Attempt' },
+      { value: 'excellent', label: 'Excellent Set' },
+      { value: 'fault', label: 'Faults' },
+      { value: 'still', label: 'Still Sets' }
+    ]
+  }
+};
+
+function getEfficiencyRoster(team) {
+  const t = getTeamState(team);
+  const pool = (t.fullSquad && t.fullSquad.length > 0) ? t.fullSquad : (t.roster && t.roster.length > 0 ? t.roster : t.rotation);
+  return [...new Set(pool.map(j => normalizeJerseyValue(j)).filter(Boolean))];
+}
+
+function renderEfficiencyPlayerOptions() {
+  const teamSel = document.getElementById('eff-team');
+  const playerSel = document.getElementById('eff-player');
+  if (!teamSel || !playerSel) return;
+  const previous = playerSel.value;
+  const roster = getEfficiencyRoster(teamSel.value);
+  playerSel.innerHTML = roster.map(j => `<option value="${escHtml(j)}">#${escHtml(j)}</option>`).join('');
+  if (roster.includes(previous)) playerSel.value = previous;
+}
+
+function renderEfficiencyControls() {
+  const modeGrid = document.getElementById('skill-mode-grid');
+  const resultGrid = document.getElementById('skill-result-grid');
+  if (!modeGrid || !resultGrid) return;
+  modeGrid.innerHTML = Object.entries(EFFICIENCY_SKILLS).map(([key, skill]) =>
+    `<button class="resource-btn skill-mode-btn${selectedEfficiencySkill === key ? ' active' : ''}" onclick="selectEfficiencySkill('${key}')">${skill.label}</button>`
+  ).join('');
+
+  const skill = EFFICIENCY_SKILLS[selectedEfficiencySkill];
+  resultGrid.innerHTML = skill.results.map(result =>
+    `<button class="resource-btn btn-success skill-result-btn" onclick="recordSkillEfficiency('${result.value}')">${result.label}</button>`
+  ).join('');
+}
+
+function selectEfficiencySkill(skill) {
+  selectedEfficiencySkill = skill;
+  renderEfficiencyControls();
+}
+
+function recordSkillEfficiency(result) {
+  if (!state.gameStarted) { showAlert('Start match first!', 'warn'); return; }
+  const team = document.getElementById('eff-team').value;
+  const player = normalizeJerseyValue(document.getElementById('eff-player').value);
+  if (!player) { showAlert('Select a player first.', 'warn'); return; }
+  const skill = EFFICIENCY_SKILLS[selectedEfficiencySkill];
+  const resultMeta = skill.results.find(r => r.value === result);
+  if (!resultMeta) return;
+
+  state.skillEfficiencyLog.push({
+    set: state.currentSet,
+    team,
+    jersey: player,
+    skill: selectedEfficiencySkill,
+    result,
+    label: resultMeta.label,
+    timestamp: new Date().toISOString()
+  });
+
+  renderEfficiencyTables();
+  showAlert(skill.label + ': ' + resultMeta.label + ' recorded for #' + player, 'success');
+}
+
+function undoLastSkillEfficiency() {
+  if (!state.skillEfficiencyLog || state.skillEfficiencyLog.length === 0) {
+    showAlert('No skill entry to undo.', 'warn');
+    return;
+  }
+  state.skillEfficiencyLog.pop();
+  renderEfficiencyTables();
+  showAlert('Last skill entry undone.', 'warn');
+}
+
+function emptyEfficiencyStats(skill) {
+  const base = { attempts: 0 };
+  if (skill === 'attack') return { ...base, kills: 0, errors: 0, inPlay: 0 };
+  if (skill === 'serve') return { ...base, aces: 0, errors: 0, inPlay: 0 };
+  if (skill === 'reception') return { ...base, positive: 0, poor: 0, errors: 0 };
+  return { ...base, excellent: 0, still: 0, faults: 0 };
+}
+
+function applyEfficiencyResult(stats, skill, result) {
+  stats.attempts++;
+  if (skill === 'attack') {
+    if (result === 'kill') stats.kills++;
+    if (result === 'error') stats.errors++;
+    if (result === 'inPlay') stats.inPlay++;
+  } else if (skill === 'serve') {
+    if (result === 'ace') stats.aces++;
+    if (result === 'error') stats.errors++;
+    if (result === 'inPlay') stats.inPlay++;
+  } else if (skill === 'reception') {
+    if (result === 'positive') stats.positive++;
+    if (result === 'poor') stats.poor++;
+    if (result === 'error') stats.errors++;
+  } else if (skill === 'set') {
+    if (result === 'excellent') stats.excellent++;
+    if (result === 'still') stats.still++;
+    if (result === 'fault') stats.faults++;
+  }
+}
+
+function getEfficiencyRows(skill, scope = 'match') {
+  const rows = {};
+  (state.skillEfficiencyLog || []).forEach(entry => {
+    if (entry.skill !== skill) return;
+    if (scope === 'current' && entry.set !== state.currentSet) return;
+    const key = entry.team + ':' + entry.jersey;
+    if (!rows[key]) rows[key] = { team: entry.team, jersey: entry.jersey, stats: emptyEfficiencyStats(skill) };
+    applyEfficiencyResult(rows[key].stats, skill, entry.result);
+  });
+  return Object.values(rows).sort((a, b) => b.stats.attempts - a.stats.attempts || a.jersey.localeCompare(b.jersey));
+}
+
+function formatPct(num, den) {
+  if (!den) return '-';
+  return ((num / den) * 100).toFixed(1) + '%';
+}
+
+function formatEff(num, den) {
+  if (!den) return '-';
+  return (num / den).toFixed(3);
+}
+
+function renderEfficiencyTable(skill, elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const scope = document.getElementById('eff-set-scope')?.value || 'match';
+  const rows = getEfficiencyRows(skill, scope);
+  if (rows.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:11px">No entries yet</div>';
+    return;
+  }
+
+  if (skill === 'attack') {
+    el.innerHTML = `<table class="efficiency-table"><thead><tr><th>Player</th><th>Att</th><th>K</th><th>Err</th><th>In</th><th>Succ</th><th>Eff</th></tr></thead><tbody>` +
+      rows.map(r => `<tr><td>${getTeamState(r.team).name} #${escHtml(r.jersey)}</td><td>${r.stats.attempts}</td><td>${r.stats.kills}</td><td>${r.stats.errors}</td><td>${r.stats.inPlay}</td><td>${formatPct(r.stats.inPlay + r.stats.kills, r.stats.attempts)}</td><td>${formatEff(r.stats.kills - r.stats.errors, r.stats.attempts)}</td></tr>`).join('') +
+      '</tbody></table>';
+  } else if (skill === 'serve') {
+    el.innerHTML = `<table class="efficiency-table"><thead><tr><th>Player</th><th>Att</th><th>Ace</th><th>Err</th><th>In</th><th>Succ</th><th>Ace%</th><th>Eff</th></tr></thead><tbody>` +
+      rows.map(r => `<tr><td>${getTeamState(r.team).name} #${escHtml(r.jersey)}</td><td>${r.stats.attempts}</td><td>${r.stats.aces}</td><td>${r.stats.errors}</td><td>${r.stats.inPlay}</td><td>${formatPct(r.stats.aces + r.stats.inPlay, r.stats.attempts)}</td><td>${formatPct(r.stats.aces, r.stats.attempts)}</td><td>${formatEff(r.stats.aces - r.stats.errors, r.stats.attempts)}</td></tr>`).join('') +
+      '</tbody></table>';
+  } else if (skill === 'reception') {
+    el.innerHTML = `<table class="efficiency-table"><thead><tr><th>Player</th><th>Att</th><th>Pos</th><th>Poor</th><th>Err</th><th>Eff</th></tr></thead><tbody>` +
+      rows.map(r => `<tr><td>${getTeamState(r.team).name} #${escHtml(r.jersey)}</td><td>${r.stats.attempts}</td><td>${r.stats.positive}</td><td>${r.stats.poor}</td><td>${r.stats.errors}</td><td>${formatEff(r.stats.positive - r.stats.poor, r.stats.attempts)}</td></tr>`).join('') +
+      '</tbody></table>';
+  } else {
+    el.innerHTML = `<table class="efficiency-table"><thead><tr><th>Player</th><th>Att</th><th>Exc</th><th>Still</th><th>Fault</th><th>Succ</th><th>Eff</th></tr></thead><tbody>` +
+      rows.map(r => `<tr><td>${getTeamState(r.team).name} #${escHtml(r.jersey)}</td><td>${r.stats.attempts}</td><td>${r.stats.excellent}</td><td>${r.stats.still}</td><td>${r.stats.faults}</td><td>${formatPct(r.stats.excellent + r.stats.still, r.stats.attempts)}</td><td>${formatEff(r.stats.excellent - r.stats.faults, r.stats.attempts)}</td></tr>`).join('') +
+      '</tbody></table>';
+  }
+}
+
+function renderSkillEfficiencyLog() {
+  const el = document.getElementById('skill-efficiency-log');
+  if (!el) return;
+  const recent = [...(state.skillEfficiencyLog || [])].reverse().slice(0, 30);
+  el.innerHTML = recent.map(entry => {
+    const color = entry.team === 'A' ? 'var(--team-a)' : 'var(--team-b)';
+    return `<div style="padding:4px 0;border-bottom:1px solid var(--border)">
+      <span style="color:${color}">${getTeamState(entry.team).name} #${escHtml(entry.jersey)}</span>
+      Set ${entry.set} | ${EFFICIENCY_SKILLS[entry.skill].label} - ${escHtml(entry.label)}
+    </div>`;
+  }).join('') || '<div style="color:var(--text-muted)">No skill entries recorded</div>';
+}
+
+function renderEfficiencyTables() {
+  renderEfficiencyTable('attack', 'attack-efficiency-table');
+  renderEfficiencyTable('serve', 'serve-efficiency-table');
+  renderEfficiencyTable('reception', 'reception-efficiency-table');
+  renderEfficiencyTable('set', 'set-efficiency-table');
+  renderSkillEfficiencyLog();
+}
+
+function renderEfficiencyView() {
+  const teamSel = document.getElementById('eff-team');
+  if (!teamSel) return;
+  teamSel.options[0].textContent = state.teamA.name;
+  teamSel.options[1].textContent = state.teamB.name;
+  renderEfficiencyPlayerOptions();
+  renderEfficiencyControls();
+  renderEfficiencyTables();
 }
 
 // ===================== RENDER =====================
@@ -2939,6 +3388,7 @@ function renderAll() {
   renderPlayerStats();
   updateGameCourtSides();
   renderSanctions();
+  renderEfficiencyView();
 }
 
 function renderRotation(team) {
@@ -3030,7 +3480,7 @@ function getTeamLeaderboard(team) {
     .filter(([key]) => key.startsWith(team + ':'))
     .sort((a, b) => b[1] - a[1])
     .map(([key, points]) => {
-      const jersey = parseInt(key.split(':')[1], 10);
+      const jersey = key.split(':')[1];
       return { jersey, points };
     });
 }
@@ -3043,6 +3493,48 @@ function renderLeaderboard(team, elementId) {
   el.innerHTML = entries.map(({ jersey, points }) =>
     `<div class="stat-row"><span class="stat-label">${teamName} #${jersey}</span><span style="color:${color};font-weight:bold">${points} pts</span></div>`
   ).join('') || '<div style="color:var(--text-muted);font-size:11px">No stats yet</div>';
+}
+
+function getTeamSkillStats(team) {
+  return Object.entries(state.playerStats || {})
+    .filter(([key]) => key.startsWith(team + ':'))
+    .map(([key, stats]) => {
+      const kills = stats.kills || 0;
+      const aces = stats.aces || 0;
+      const blocks = stats.blocks || 0;
+      const attackErrors = stats.attackErrors || 0;
+      const serveErrors = stats.serveErrors || 0;
+      const faults = stats.faults || 0;
+      
+      // Aggregate all errors into a single metric
+      const totalErrors = attackErrors + serveErrors + faults;
+
+      return {
+        jersey: key.split(':')[1],
+        kills,
+        aces,
+        blocks,
+        attackErrors,
+        serveErrors,
+        faults,
+        totalErrors
+      };
+    })
+    .filter(row => row.kills + row.aces + row.blocks + row.totalErrors > 0)
+    .sort((a, b) => (b.kills + b.aces + b.blocks) - (a.kills + a.aces + a.blocks));
+}
+
+function renderSkillStats(team, elementId) {
+  const el = document.getElementById(elementId);
+  const rows = getTeamSkillStats(team);
+  const teamName = getTeamState(team).name;
+  const color = team === 'A' ? 'var(--team-a)' : 'var(--team-b)';
+  el.innerHTML = rows.map(row =>
+    `<div class="stat-row">
+      <span class="stat-label" style="color:${color}">${teamName} #${row.jersey}</span>
+      <span style="font-weight:bold">K ${row.kills} | Ace ${row.aces} | Blk ${row.blocks} | Err ${row.totalErrors}</span>
+    </div>`
+  ).join('') || '<div style="color:var(--text-muted);font-size:11px">No skill stats yet</div>';
 }
 
 function buildMatchSummary() {
@@ -3059,7 +3551,8 @@ function buildMatchSummary() {
         totalPoints: state.teamA.totalPts,
         timeoutsUsed: state.teamA.toUsed,
         substitutionsUsed: state.teamA.totalSubs,
-        leaderboard: getTeamLeaderboard('A')
+        leaderboard: getTeamLeaderboard('A'),
+        skillStats: getTeamSkillStats('A')
       },
       B: {
         name: state.teamB.name,
@@ -3067,7 +3560,8 @@ function buildMatchSummary() {
         totalPoints: state.teamB.totalPts,
         timeoutsUsed: state.teamB.toUsed,
         substitutionsUsed: state.teamB.totalSubs,
-        leaderboard: getTeamLeaderboard('B')
+        leaderboard: getTeamLeaderboard('B'),
+        skillStats: getTeamSkillStats('B')
       }
     },
     setHistory: state.setHistory.map(s => ({
@@ -3076,7 +3570,15 @@ function buildMatchSummary() {
       teamB: s.b,
       winner: getTeamState(s.winner).name
     })),
-    substitutionLog: state.allSubsLog
+    substitutionLog: state.allSubsLog,
+    pointLog: state.pointLog,
+    skillEfficiency: {
+      attack: getEfficiencyRows('attack'),
+      serve: getEfficiencyRows('serve'),
+      reception: getEfficiencyRows('reception'),
+      set: getEfficiencyRows('set')
+    },
+    skillEfficiencyLog: state.skillEfficiencyLog
   };
 }
 
@@ -3136,6 +3638,10 @@ function updateSummary() {
   document.getElementById('leaderboard-title-b').textContent = state.teamB.name;
   renderLeaderboard('A', 'top-scorers-a');
   renderLeaderboard('B', 'top-scorers-b');
+  document.getElementById('skill-stats-title-a').textContent = state.teamA.name;
+  document.getElementById('skill-stats-title-b').textContent = state.teamB.name;
+  renderSkillStats('A', 'skill-stats-a');
+  renderSkillStats('B', 'skill-stats-b');
 
   // Full sub log
   const fl = document.getElementById('full-sub-log');
@@ -3194,29 +3700,45 @@ function switchView(name) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(t => {
-    if (t.textContent.toLowerCase().includes(name)) t.classList.add('active');
+    if ((t.getAttribute('onclick') || '').includes("'" + name + "'")) t.classList.add('active');
   });
   if (name === 'summary') updateSummary();
   if (name === 'court') { renderCourt(); updateCourtScores(); renderPlayerStats(); }
+  if (name === 'efficiency') renderEfficiencyView();
   if (name === 'teams') { renderTeamsList(); if (editingTeamId) renderTeamEditor(editingTeamId); }
   if (name === 'setup') refreshSetupDropdowns();
 }
 
 // ===================== RESET =====================
+function generateFreshTeamState(existingTeamState) {
+  return {
+    name: existingTeamState.name,
+    roster: existingTeamState.roster,
+    fullSquad: existingTeamState.fullSquad || [...existingTeamState.roster],
+    libero: existingTeamState.libero,
+    rotation: [...existingTeamState.roster],
+    timeouts: 2,
+    subsUsed: 0,
+    subsLog: [],
+    totalPts: 0,
+    setsWon: 0,
+    toUsed: 0,
+    totalSubs: 0,
+    liberoStatus: { in: false, replaced: null }, // Added missing property
+    sanctions: []                                // Added missing property
+  };
+}
+
 function resetAll() {
   showModal('Reset Match', 'This will clear all match data. Are you sure?',
     [{ label: 'Cancel', cls: 'btn-neutral', fn: closeModal },
      { label: 'Reset', cls: 'btn-danger', fn: () => {
        state = {
-         teamA: { name: state.teamA.name, roster: state.teamA.roster, libero: state.teamA.libero,
-           rotation: [...state.teamA.roster], timeouts: 2, subsUsed: 0, subsLog: [],
-           totalPts: 0, setsWon: 0, toUsed: 0, totalSubs: 0 },
-         teamB: { name: state.teamB.name, roster: state.teamB.roster, libero: state.teamB.libero,
-           rotation: [...state.teamB.roster], timeouts: 2, subsUsed: 0, subsLog: [],
-           totalPts: 0, setsWon: 0, toUsed: 0, totalSubs: 0 },
+         teamA: generateFreshTeamState(state.teamA),
+         teamB: generateFreshTeamState(state.teamB),
          scoreA: 0, scoreB: 0, currentSet: 1, matchNumber: getNextMatchNumber(), serving: state.firstServer,
          firstServer: state.firstServer,
-         setHistory: [], allSubsLog: [], pointLog: [], playerPoints: {},
+         setHistory: [], allSubsLog: [], pointLog: [], skillEfficiencyLog: [], playerPoints: {}, playerStats: {},
          maxSubs: state.maxSubs, setsToWin: state.setsToWin, ptsPerSet: getPointsTargetForSet(1),
          gameStarted: true, matchEnded: false, summaryExported: false,
          currentSubTeam: null, lastTouchPlayer: null, lastTouchTeam: null,
