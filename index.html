@@ -644,6 +644,12 @@
   }
   .setup-panel h3.team-a-h { color: var(--team-a); }
   .setup-panel h3.team-b-h { color: var(--team-b); }
+  .setup-panel {
+    position: relative;
+  }
+  .setup-panel.has-open-picker {
+    z-index: 120;
+  }
   .field-row { margin-bottom: 8px; }
   .field-row label { 
     display: block; 
@@ -704,38 +710,7 @@
     z-index: 1;
   }
   .setup-player-picker.open {
-    z-index: 30;
-  }
-  .setup-player-picker .player-num-input {
-    padding-right: 30px;
-  }
-  .player-picker-trigger {
-    position: absolute;
-    right: 4px;
-    top: 50%;
-    width: 24px;
-    height: calc(100% - 8px);
-    min-height: 24px;
-    transform: translateY(-50%);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 8px;
-    background: rgba(255,255,255,0.08);
-    color: var(--text-option);
-    cursor: pointer;
-    font-size: 13px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast);
-  }
-  .player-picker-trigger:hover,
-  .player-picker-trigger:focus-visible {
-    background: rgba(255,255,255,0.14);
-    border-color: rgba(255,255,255,0.18);
-  }
-  .player-picker-trigger:active {
-    transform: translateY(-50%) scale(0.96);
+    z-index: 150;
   }
   .player-picker-menu {
     position: absolute;
@@ -750,6 +725,7 @@
     border-radius: var(--radius-sm);
     background: rgba(20,24,42,0.98);
     box-shadow: var(--shadow-soft);
+    z-index: 160;
   }
   .setup-player-picker.open .player-picker-menu {
     display: grid;
@@ -2170,6 +2146,22 @@ function loadSavedTeamIntoSetup(slot, teamId) {
 
 function jerseyStr(v) { return String(v).trim(); }
 
+function closeSetupPlayerPickers(except = null) {
+  document.querySelectorAll('.setup-player-picker.open').forEach(el => {
+    if (el !== except) el.classList.remove('open');
+  });
+  document.querySelectorAll('.setup-panel.has-open-picker').forEach(panel => {
+    if (!except || panel !== except.closest('.setup-panel')) panel.classList.remove('has-open-picker');
+  });
+}
+
+function openSetupPlayerPicker(pickerWrap) {
+  closeSetupPlayerPickers(pickerWrap);
+  pickerWrap.classList.add('open');
+  const panel = pickerWrap.closest('.setup-panel');
+  if (panel) panel.classList.add('has-open-picker');
+}
+
 function buildSetupPositionCells(slot, roster) {
   const container = document.getElementById('team' + slot + '-players');
   if (!container) return;
@@ -2224,30 +2216,19 @@ function buildSetupPositionCells(slot, roster) {
         optionBtn.addEventListener('click', () => {
           inp.value = jersey;
           pickerWrap.classList.remove('open');
+          const panel = pickerWrap.closest('.setup-panel');
+          if (panel) panel.classList.remove('has-open-picker');
           deduplicateSetupSlot(slot, i);
           inp.focus();
         });
         pickerMenu.appendChild(optionBtn);
       });
 
-      const pickerBtn = document.createElement('button');
-      pickerBtn.type = 'button';
-      pickerBtn.className = 'player-picker-trigger';
-      pickerBtn.textContent = 'v';
-      pickerBtn.setAttribute('aria-label', 'Choose player for position ' + i);
-      pickerBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        document.querySelectorAll('.setup-player-picker.open').forEach(el => {
-          if (el !== pickerWrap) el.classList.remove('open');
-        });
-        pickerWrap.classList.toggle('open');
-        inp.focus();
-      });
-      inp.addEventListener('focus', () => pickerWrap.classList.add('open'));
-      inp.addEventListener('input', () => pickerWrap.classList.remove('open'));
+      inp.addEventListener('focus', () => openSetupPlayerPicker(pickerWrap));
+      inp.addEventListener('click', () => openSetupPlayerPicker(pickerWrap));
+      inp.addEventListener('input', () => closeSetupPlayerPickers());
 
       pickerWrap.appendChild(inp);
-      pickerWrap.appendChild(pickerBtn);
       pickerWrap.appendChild(pickerMenu);
       wrap.appendChild(pickerWrap);
     } else {
@@ -3691,7 +3672,7 @@ document.getElementById('modal-overlay').onclick = function(e) {
 
 document.addEventListener('click', function(e) {
   if (e.target.closest('.setup-player-picker')) return;
-  document.querySelectorAll('.setup-player-picker.open').forEach(el => el.classList.remove('open'));
+  closeSetupPlayerPickers();
 });
 
 // ===================== ALERT =====================
