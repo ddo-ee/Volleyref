@@ -22,7 +22,7 @@
     --bg-card: rgb(26, 37, 58, 0.6);
     --text-primary: #f0ede62f;
     --text-secondary: #9ab09a;
-    --text-input_field: #9b9b9b;
+    --text-input_field: #bdbdbd;
     --text-option: #f0ede6;
     --text-muted: #10b1a9;
     --border: rgb(255, 255, 255, 0.08);
@@ -1567,11 +1567,11 @@
     <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px" id="sub-modal-info"></div>
     <div style="margin-bottom:10px">
       <label style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px">Player OUT (current jersey)</label>
-      <select id="sub-out" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:8px;font-family:var(--font-main);font-size:13px"></select>
+      <select id="sub-out" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-input_field);padding:8px;font-family:var(--font-main);font-size:13px"></select>
     </div>
     <div style="margin-bottom:16px">
       <label style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px">Player IN (jersey number)</label>
-      <input id="sub-in-jersey" type="number" placeholder="Enter jersey #" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:8px;font-family:var(--font-main);font-size:13px"/>
+      <input id="sub-in-jersey" type="number" placeholder="Enter jersey #" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-input_field);padding:8px;font-family:var(--font-main);font-size:13px"/>
     </div>
     <div id="sub-validation-msg" style="font-size:11px;margin-bottom:10px"></div>
     <div style="display:flex;gap:10px;justify-content:flex-end">
@@ -2457,7 +2457,25 @@ function closeSubModal() {
 }
 
 function getSubBuddy(team, jersey) {
-  return subRegistry[team][jersey] || null;
+  return subRegistry[team][String(jersey)] || null;
+}
+
+function normalizeJerseyValue(value) {
+  return String(value ?? '').trim();
+}
+
+function isValidJerseyValue(value) {
+  return /^\d+$/.test(value);
+}
+
+function rotationHasJersey(rotation, jersey) {
+  const target = normalizeJerseyValue(jersey);
+  return rotation.some(value => normalizeJerseyValue(value) === target);
+}
+
+function findRotationIndex(rotation, jersey) {
+  const target = normalizeJerseyValue(jersey);
+  return rotation.findIndex(value => normalizeJerseyValue(value) === target);
 }
 
 function updateSubModalBuddyHint() {
@@ -2465,7 +2483,7 @@ function updateSubModalBuddyHint() {
   if (!team) return;
 
   const t = getTeamState(team);
-  const outJersey = parseInt(document.getElementById('sub-out').value, 10);
+  const outJersey = normalizeJerseyValue(document.getElementById('sub-out').value);
   const inInput = document.getElementById('sub-in-jersey');
   const msg = document.getElementById('sub-validation-msg');
   const info = document.getElementById('sub-modal-info');
@@ -2480,7 +2498,7 @@ function updateSubModalBuddyHint() {
     inInput.value = buddy;
     inInput.readOnly = true;
     info.innerHTML = '#' + outJersey + ' is tied to #' + buddy + ' for this set. Only this buddy substitution is allowed.';
-    if (t.rotation.includes(buddy)) {
+    if (rotationHasJersey(t.rotation, buddy)) {
       msg.innerHTML = '<span style="color:var(--danger)">#' + buddy + ' is already on court, so #' + outJersey + ' cannot be substituted right now.</span>';
     }
   } else {
@@ -2491,15 +2509,15 @@ function updateSubModalBuddyHint() {
 function confirmSub() {
   const team = state.currentSubTeam;
   const t = getTeamState(team);
-  const outJersey = parseInt(document.getElementById('sub-out').value);
-  const inJersey = parseInt(document.getElementById('sub-in-jersey').value);
+  const outJersey = normalizeJerseyValue(document.getElementById('sub-out').value);
+  const inJersey = normalizeJerseyValue(document.getElementById('sub-in-jersey').value);
   const msg = document.getElementById('sub-validation-msg');
 
-  if (!Number.isInteger(inJersey) || inJersey < 0) {
+  if (!isValidJerseyValue(inJersey)) {
     msg.innerHTML = '<span style="color:var(--danger)">Invalid jersey number.</span>';
     return;
   }
-  if (t.rotation.includes(inJersey)) {
+  if (rotationHasJersey(t.rotation, inJersey)) {
     msg.innerHTML = '<span style="color:var(--danger)">Player #' + inJersey + ' is already on court.</span>';
     return;
   }
@@ -2530,7 +2548,11 @@ function confirmSub() {
   }
 
   // Do the sub
-  const idx = t.rotation.indexOf(outJersey);
+  const idx = findRotationIndex(t.rotation, outJersey);
+  if (idx === -1) {
+    msg.innerHTML = '<span style="color:var(--danger)">Player #' + outJersey + ' is not currently on court.</span>';
+    return;
+  }
   t.rotation[idx] = inJersey;
   t.subsUsed++;
   t.totalSubs++;
