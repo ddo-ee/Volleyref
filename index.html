@@ -1479,7 +1479,10 @@
         <button id="score-confirm-btn" onclick="confirmCourtPoint()" disabled>
           CONFIRM POINT
         </button>
-        <button id="clear-touch-btn" onclick="clearTouch()">Clear Selection</button>
+        <div style="display:flex; gap:6px;">
+          <button id="clear-touch-btn" onclick="clearTouch()" style="flex:1;">Clear Selection</button>
+          <button class="resource-btn btn-warn" onclick="undoLastPoint()" style="flex:1; border: 1px solid var(--warn); padding: 8px; font-size: 11px;">Undo Point</button>
+        </div>
 
         <div class="court-score-card">
           <div class="panel-title">Score</div>
@@ -2219,27 +2222,50 @@ function resetSetState() {
 
 function addPoint(team) {
   if (!state.gameStarted) { showAlert('Start match first!', 'warn'); return; }
+  
+  let scorerInfo = null;
+
   if (team === 'A') {
     state.scoreA++;
     state.teamA.totalPts++;
-    // Track server point
-    if (state.lastTouchPlayer && state.lastTouchTeam === 'A') trackPlayerPoint('A', state.lastTouchPlayer);
+    // Track server/scorer point
+    if (state.lastTouchPlayer && state.lastTouchTeam === 'A') {
+        trackPlayerPoint('A', state.lastTouchPlayer);
+        scorerInfo = { team: 'A', jersey: state.lastTouchPlayer };
+    }
   } else {
     state.scoreB++;
     state.teamB.totalPts++;
-    if (state.lastTouchPlayer && state.lastTouchTeam === 'B') trackPlayerPoint('B', state.lastTouchPlayer);
+    if (state.lastTouchPlayer && state.lastTouchTeam === 'B') {
+        trackPlayerPoint('B', state.lastTouchPlayer);
+        scorerInfo = { team: 'B', jersey: state.lastTouchPlayer };
+    }
   }
 
   let wasServing = state.serving;
+  let rotatedTeam = null;
+
   if (team !== state.serving) {
     // Side out — rotate receiving team
     rotateTeamState(team);
     state.serving = team;
+    rotatedTeam = team; // Track this so we can un-rotate if undone
   }
 
-  state.pointLog.push({ scoreA: state.scoreA, scoreB: state.scoreB, team, set: state.currentSet });
+  // Push all action data so we can accurately reverse it later
+  state.pointLog.push({ 
+      scoreA: state.scoreA, 
+      scoreB: state.scoreB, 
+      team, 
+      set: state.currentSet,
+      scorerInfo: scorerInfo,
+      wasServing: wasServing,
+      rotatedTeam: rotatedTeam
+  });
+  
   const actionEl = document.getElementById('last-action');
   if (actionEl) actionEl.textContent = 'Point to ' + (team==='A'?state.teamA.name:state.teamB.name) + ' (' + state.scoreA + '-' + state.scoreB + ')';
+  
   checkSetWin();
   renderAll();
 }
@@ -2252,13 +2278,32 @@ function trackPlayerPoint(team, jersey) {
 function undoLastPoint() {
   if (state.pointLog.length === 0) { showAlert('Nothing to undo', 'warn'); return; }
   const last = state.pointLog.pop();
+  
+  // 1. Revert Team Score
   state.scoreA = last.scoreA - (last.team === 'A' ? 1 : 0);
   state.scoreB = last.scoreB - (last.team === 'B' ? 1 : 0);
   if (last.team === 'A') state.teamA.totalPts = Math.max(0, state.teamA.totalPts - 1);
   else state.teamB.totalPts = Math.max(0, state.teamB.totalPts - 1);
-  // Revert serving if changed
-  const prev = state.pointLog.length > 0 ? state.pointLog[state.pointLog.length-1] : null;
-  if (prev) state.serving = prev.team; // approximate
+
+  // 2. Revert Player Score (Statistics)
+  if (last.scorerInfo) {
+      const key = last.scorerInfo.team + ':' + last.scorerInfo.jersey;
+      if (state.playerPoints[key]) {
+          state.playerPoints[key]--;
+          // Remove the player from the leaderboard if their points drop back to 0
+          if (state.playerPoints[key] <= 0) {
+              delete state.playerPoints[key];
+          }
+      }
+  }
+
+  // 3. Revert Serving & Auto-Rotations
+  state.serving = last.wasServing;
+  if (last.rotatedTeam) {
+      // If a side-out caused an auto-rotation, forcefully rotate them backwards
+      performRotation(last.rotatedTeam, 'back');
+  }
+
   renderAll();
   showAlert('Last point undone', 'warn');
 }
