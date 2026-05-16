@@ -1171,6 +1171,22 @@
   ::-webkit-scrollbar-track { background: var(--bg-dark); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+  /* Add inside your <style> tags */
+  .pos-cell.libero-selectable {
+    animation: pulseLibero 1.5s infinite;
+    cursor: pointer;
+    border: 1px solid var(--success);
+  }
+  @keyframes pulseLibero {
+    0% { box-shadow: 0 0 0 0 rgba(0, 187, 25, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(0, 187, 25, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 187, 25, 0); }
+  }
+  .pos-cell.is-libero {
+    background: rgba(106, 176, 224, 0.25);
+    border-color: #8ac0e5;
+  }
 </style>
 </head>
 <body>
@@ -1352,6 +1368,7 @@
         </div>
         <div class="game-team-row">
           <span style="font-size:10px;color:var(--text-secondary);flex:1">Subs <span id="subsA-count">0</span>/6</span>
+          <button class="resource-btn btn-neutral" onclick="handleLiberoAction('A')">L Swap</button>
           <button class="resource-btn btn-a" onclick="openSubModal('A')">Sub</button>
         </div>
         <div class="game-team-log">
@@ -1380,6 +1397,7 @@
         </div>
         <div class="game-team-row">
           <span style="font-size:10px;color:var(--text-secondary);flex:1">Subs <span id="subsB-count">0</span>/6</span>
+          <button class="resource-btn btn-neutral" onclick="handleLiberoAction('B')">L Swap</button>
           <button class="resource-btn btn-b" onclick="openSubModal('B')">Sub</button>
         </div>
         <div class="game-team-log">
@@ -1399,21 +1417,23 @@
         <div id="score-log"></div>
       </div>
 
-      <!-- Serve & Validation -->
+      <!-- Sanctions & Penalties Dashboard -->
       <div class="panel">
-        <div class="panel-title">Serve & Validation</div>
-        <div style="margin-bottom:10px">
-          <div class="resource-label" style="margin-bottom:4px">Current Server</div>
-          <div id="server-info" style="font-size:14px;color:var(--court-line)">—</div>
+        <div class="panel-title">Sanctions & Penalties</div>
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <select id="sanction-team" class="resource-btn btn-neutral" style="flex:1">
+            <option value="A">Team A</option>
+            <option value="B">Team B</option>
+          </select>
+          <input type="number" id="sanction-jersey" placeholder="Jersey #" style="width:70px;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-input_field);border-radius:var(--radius-sm);text-align:center;font-size:11px" />
         </div>
-        <div style="margin-bottom:10px">
-          <div class="resource-label" style="margin-bottom:4px">Rotation Check</div>
-          <div id="rotation-status" style="font-size:12px;color:var(--success)">● Valid</div>
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <button class="resource-btn" style="flex:1;background:rgba(255,200,0,0.15);color:#ffcc00;border:1px solid #ffcc00" onclick="addSanction('Yellow')">Yellow</button>
+          <button class="resource-btn" style="flex:1;background:rgba(224,64,64,0.15);color:var(--danger);border:1px solid var(--danger)" onclick="addSanction('Red')">Red</button>
+          <button class="resource-btn btn-neutral" style="flex:1" onclick="addSanction('Delay')">Delay</button>
         </div>
-        <div>
-          <div class="resource-label" style="margin-bottom:4px">Last Action</div>
-          <div id="last-action" style="font-size:11px;color:var(--text-secondary)">—</div>
-        </div>
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase">Active Sanctions</div>
+        <div id="sanction-log" style="max-height:60px;overflow-y:auto;font-size:11px;color:var(--text-secondary)"></div>
       </div>
     </div>
   </div>
@@ -1662,6 +1682,8 @@ let state = {
   lastTouchTeam: null,
   courtSwapped: false,
 };
+
+let liberoSelectionMode = null;
 
 const TEAM_COLORS = [
   '#00c2fd', // Team A blue
@@ -2185,6 +2207,12 @@ function resetSetState() {
   state.teamA.timeouts = 2; state.teamB.timeouts = 2;
   state.teamA.subsUsed = 0; state.teamB.subsUsed = 0;
   state.teamA.subsLog = []; state.teamB.subsLog = [];
+  state.teamA.liberoStatus = {in: false, replaced: null};
+  state.teamB.liberoStatus = {in: false, replaced: null};
+  state.teamA.sanctions = [];
+  state.teamB.sanctions = [];
+  liberoSelectionMode = null;
+
   state.pointLog = [];
   subRegistry = { A: {}, B: {} };
 }
@@ -2210,8 +2238,8 @@ function addPoint(team) {
   }
 
   state.pointLog.push({ scoreA: state.scoreA, scoreB: state.scoreB, team, set: state.currentSet });
-  document.getElementById('last-action').textContent = 'Point to ' + (team==='A'?state.teamA.name:state.teamB.name) + ' (' + state.scoreA + '-' + state.scoreB + ')';
-
+  const actionEl = document.getElementById('last-action');
+  if (actionEl) actionEl.textContent = 'Point to ' + (team==='A'?state.teamA.name:state.teamB.name) + ' (' + state.scoreA + '-' + state.scoreB + ')';
   checkSetWin();
   renderAll();
 }
@@ -2284,14 +2312,28 @@ function endMatch() {
 }
 
 // ===================== ROTATION =====================
-function rotateTeamState(team) {
+function performRotation(team, dir) {
   const t = getTeamState(team);
-  const first = t.rotation.shift();
-  t.rotation.push(first);
-}
+  
+  // AUTO LIBERO OUT LOGIC: Prevent Libero from entering front row
+  if (t.liberoStatus && t.liberoStatus.in) {
+    const liberoIdx = t.rotation.findIndex(j => String(j) === String(t.libero));
+    
+    // If moving forward, Pos 5 (index 4) shifts to Pos 4 (Front Row)
+    if (dir === 'fwd' && liberoIdx === 4) {
+      showAlert(`Libero rotated to front row! Auto-swapped for #${t.liberoStatus.replaced}.`, 'warn');
+      t.rotation[liberoIdx] = t.liberoStatus.replaced;
+      t.liberoStatus = { in: false, replaced: null };
+    } 
+    // If moving backward, Pos 1 (index 0) shifts to Pos 2 (Front Row)
+    else if (dir === 'back' && liberoIdx === 0) {
+      showAlert(`Libero rotated to front row! Auto-swapped for #${t.liberoStatus.replaced}.`, 'warn');
+      t.rotation[liberoIdx] = t.liberoStatus.replaced;
+      t.liberoStatus = { in: false, replaced: null };
+    }
+  }
 
-function rotateTeam(team, dir) {
-  const t = getTeamState(team);
+  // Perform the actual array shift
   if (dir === 'fwd') {
     const first = t.rotation.shift();
     t.rotation.push(first);
@@ -2299,7 +2341,15 @@ function rotateTeam(team, dir) {
     const last = t.rotation.pop();
     t.rotation.unshift(last);
   }
-  renderRotation(team);
+}
+
+function rotateTeamState(team) {
+  performRotation(team, 'fwd');
+}
+
+function rotateTeam(team, dir) {
+  performRotation(team, dir);
+  renderAll();
   checkRotationValidity();
 }
 
@@ -2402,7 +2452,8 @@ function updateGameCourtSides() {
 }
 
 function checkRotationValidity() {
-  document.getElementById('rotation-status').innerHTML = '● Valid <span style="color:var(--text-muted);font-size:10px">(positional check)</span>';
+  const rotStatusEl = document.getElementById('rotation-status');
+  if (rotStatusEl) rotStatusEl.innerHTML = '● Valid <span style="color:var(--text-muted);font-size:10px">(positional check)</span>';
 }
 
 // ===================== TIMEOUT =====================
@@ -2817,7 +2868,6 @@ function renderAll() {
   const serverJersey = servingTeam.rotation[0];
   document.getElementById('serve-indicator').textContent = '● Serving: ' + servingTeam.name + ' #' + serverJersey;
   document.getElementById('serve-indicator').style.color = state.serving === 'A' ? 'var(--team-a)' : 'var(--team-b)';
-  document.getElementById('server-info').textContent = servingTeam.name + ' — #' + serverJersey + ' (Pos 1)';
 
   // Rotations
   renderRotation('A');
@@ -2843,6 +2893,7 @@ function renderAll() {
   updateCourtScores();
   renderPlayerStats();
   updateGameCourtSides();
+  renderSanctions();
 }
 
 function renderRotation(team) {
@@ -2865,10 +2916,18 @@ function renderRotation(team) {
   gridLayout.order.forEach((posKey) => {
     const posIdx = getPositionIndex(posKey);
     const jersey = t.rotation[posIdx];
-    const isLib = jersey === libero && libero > 0;
+    const isLib = String(jersey) === String(libero) && libero > 0;
     const isServing = posIdx === 0 && state.serving === team;
+
+    const isSelectable = liberoSelectionMode === team && (posIdx === 0 || posIdx === 4 || posIdx === 5);
+
     const div = document.createElement('div');
-    div.className = 'pos-cell' + (isLib ? ' libero' : '') + (isServing ? ' serving' : '');
+    div.className = 'pos-cell' + (isLib ? ' is-libero' : '') + (isServing ? ' serving' : '') + (isSelectable ? ' libero-selectable' : '');
+
+    div.onclick = () => {
+      if (liberoSelectionMode === team) executeLiberoSwap(team, posIdx);
+    };
+
     div.innerHTML = `<span class="pos-num-label">${posIdx+1}</span><span class="pnum">#${jersey}</span>`;
     if (isServing) {
       const srv = document.createElement('span');
@@ -3119,11 +3178,105 @@ function resetAll() {
          courtSwapped: state.courtSwapped
        };
        subRegistry = { A: {}, B: {} };
+       liberoSelectionMode = null;
        closeModal();
        renderAll();
        showAlert('Match reset!', 'warn');
      }}
   ]);
+}
+
+function handleLiberoAction(team) {
+  const t = getTeamState(team);
+  if (!t.libero || t.libero == 0) {
+    showAlert('No Libero assigned for ' + t.name, 'warn');
+    return;
+  }
+
+  if (t.liberoStatus.in) {
+    // If already in, clicking it pulls them out automatically
+    swapLiberoOut(team);
+  } else {
+    // Toggle selection mode to pick a back-row player
+    if (liberoSelectionMode === team) {
+      liberoSelectionMode = null;
+      renderAll();
+    } else {
+      liberoSelectionMode = team;
+      renderAll();
+      showAlert('Select a back-row player (Pos 1, 5, or 6) to replace.', 'success');
+    }
+  }
+}
+
+function executeLiberoSwap(team, posIdx) {
+  const t = getTeamState(team);
+  // Restrict to back-row positions: Pos 1 (0), Pos 5 (4), Pos 6 (5)
+  if (posIdx !== 0 && posIdx !== 4 && posIdx !== 5) {
+    showAlert('Libero can only replace back-row players!', 'danger');
+    return;
+  }
+
+  const targetJersey = t.rotation[posIdx];
+  t.liberoStatus = { in: true, replaced: targetJersey };
+  t.rotation[posIdx] = String(t.libero);
+  liberoSelectionMode = null;
+  
+  const actionEl = document.getElementById('last-action');
+  if (actionEl) actionEl.textContent = `Libero IN for #${targetJersey}`;
+  renderAll();
+}
+
+function swapLiberoOut(team) {
+  const t = getTeamState(team);
+  const idx = t.rotation.findIndex(j => String(j) === String(t.libero));
+  
+  if (idx !== -1 && t.liberoStatus.replaced) {
+     t.rotation[idx] = String(t.liberoStatus.replaced);
+     const actionEl = document.getElementById('last-action');
+     if (actionEl) actionEl.textContent = `Libero OUT, #${t.liberoStatus.replaced} IN`;
+  }
+  
+  t.liberoStatus = { in: false, replaced: null };
+  renderAll();
+}
+
+function addSanction(type) {
+  const tSelect = document.getElementById('sanction-team').value;
+  const jInput = document.getElementById('sanction-jersey').value.trim();
+  const t = getTeamState(tSelect);
+  
+  let target = jInput ? `#${jInput}` : 'Bench';
+  const entry = { type, target, set: state.currentSet };
+  t.sanctions.push(entry);
+  
+  document.getElementById('sanction-jersey').value = '';
+  renderSanctions();
+  showAlert(`${type} Warning/Penalty issued to ${t.name} ${target}`, type === 'Yellow' ? 'warn' : 'danger');
+}
+
+function renderSanctions() {
+  const log = document.getElementById('sanction-log');
+  if (!log || !state.teamA.sanctions) return;
+  
+  const all = [
+    ...state.teamA.sanctions.map(s => ({...s, team: 'A'})),
+    ...state.teamB.sanctions.map(s => ({...s, team: 'B'}))
+  ];
+  
+  if (all.length === 0) {
+    log.innerHTML = 'No active sanctions.';
+    return;
+  }
+  
+  log.innerHTML = all.map(s => {
+    const color = s.type === 'Yellow' ? '#ffcc00' : (s.type === 'Red' ? 'var(--danger)' : 'var(--text-secondary)');
+    const tName = s.team === 'A' ? state.teamA.name : state.teamB.name;
+    return `<div style="padding:4px 0;border-bottom:1px solid var(--border)">
+      <strong style="color:${color}">${s.type}</strong> - ${tName} ${s.target} 
+      <span style="color:var(--text-muted);font-size:9px">(Set ${s.set})</span>
+    </div>`;
+  }).join('');
 }
 
 // ===================== INIT =====================
