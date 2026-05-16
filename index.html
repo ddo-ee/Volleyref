@@ -281,14 +281,16 @@
   .resource-btn:hover,
   .btn-big:hover,
   .court-action-btn:hover,
-  #clear-touch-btn:hover {
+  #clear-touch-btn:hover,
+  #clear-eff-touch-btn:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-control), inset 0 1px 0 var(--surface-glow);
   }
   .resource-btn:active,
   .btn-big:active,
   .court-action-btn:active,
-  #clear-touch-btn:active {
+  #clear-touch-btn:active,
+  #clear-eff-touch-btn:active {
     transform: translateY(0) scale(0.99);
   }
   .resource-btn:disabled,
@@ -504,8 +506,8 @@
     box-shadow: var(--shadow-soft);
   }
 
-  /* ===================== COURT VIEW ===================== */
-  #view-court.active {
+  /* ===================== COURT VIEWS ===================== */
+  #view-court.active, #view-efficiency.active {
     min-height: calc(100vh - 58px);
     display: flex;
     flex-direction: column;
@@ -518,7 +520,7 @@
     align-items: flex-start;
     gap: 12px;
   }
-  #court-outer {
+  #court-outer, #eff-court-outer {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
     gap: 12px;
@@ -526,20 +528,20 @@
     flex: 1 1 auto;
     min-height: 0;
   }
-  #court-svg-wrap {
+  #court-svg-wrap, #eff-court-svg-wrap {
     width: 100%;
     max-width: min(100%, 136vh, 1080px);
     min-width: 0;
     justify-self: center;
   }
-  #court-controls {
+  #court-controls, #eff-court-controls {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr;
     gap: 10px;
     align-content: start;
   }
-  #court-svg {
+  #court-svg, #eff-court-svg {
     width: 100%;
     height: auto;
     max-height: min(68vh, 600px);
@@ -602,7 +604,7 @@
     color: var(--danger);
   }
 
-  #clear-touch-btn {
+  #clear-touch-btn, #clear-eff-touch-btn {
     width: 100%;
     padding: 8px;
     background: transparent;
@@ -617,7 +619,8 @@
     box-shadow: inset 0 1px 0 var(--surface-glow);
     transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
   }
-  #clear-touch-btn:hover { color: var(--text-primary); border-color: var(--text-muted); background: rgba(255,255,255,0.05); }
+  #clear-touch-btn:hover, #clear-eff-touch-btn:hover { color: var(--text-primary); border-color: var(--text-muted); background: rgba(255,255,255,0.05); }
+  
   .court-score-card {
     background: linear-gradient(180deg, var(--surface-soft), rgba(0,0,0,0)) var(--bg-card);
     border: 1px solid var(--border);
@@ -1028,9 +1031,9 @@
   }
   @media (max-width: 1024px) {
     .match-rules-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    #court-outer { grid-template-columns: minmax(0, 1fr) minmax(240px, 300px); }
-    #court-svg-wrap { max-width: min(100%, 104vh, 860px); }
-    #court-svg { max-height: min(52vh, 430px); }
+    #court-outer, #eff-court-outer { grid-template-columns: minmax(0, 1fr) minmax(240px, 300px); }
+    #court-svg-wrap, #eff-court-svg-wrap { max-width: min(100%, 104vh, 860px); }
+    #court-svg, #eff-court-svg { max-height: min(52vh, 430px); }
   }
   @media (max-width: 700px) {
     #main-grid { grid-template-columns: 1fr; }
@@ -1147,11 +1150,11 @@
     #view-game #score-log {
       max-height: 76px;
     }
-    #view-court.active { min-height: auto; }
-    #court-outer { grid-template-columns: 1fr; }
-    #court-svg-wrap { max-width: 100%; }
-    #court-svg { max-height: none; }
-    #court-controls { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #view-court.active, #view-efficiency.active { min-height: auto; }
+    #court-outer, #eff-court-outer { grid-template-columns: 1fr; }
+    #court-svg-wrap, #eff-court-svg-wrap { max-width: 100%; }
+    #court-svg, #eff-court-svg { max-height: none; }
+    #court-controls, #eff-court-controls { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .player-stats-panel { grid-column: 1 / -1; }
     .game-score-actions { grid-template-columns: 1fr; }
     .match-rules-grid { grid-template-columns: 1fr; }
@@ -1175,7 +1178,7 @@
     #alert-bar { min-width: 0; width: calc(100% - 24px); }
   }
   @media (max-width: 420px) {
-    #court-controls { grid-template-columns: 1fr; }
+    #court-controls, #eff-court-controls { grid-template-columns: 1fr; }
   }
 
   /* Scrollbar */
@@ -1199,47 +1202,34 @@
     background: rgba(106, 176, 224, 0.25);
     border-color: #8ac0e5;
   }
+  
+  .player-circle.libero-selectable circle {
+    animation: pulseLiberoSvg 1.5s infinite;
+    stroke: var(--success) !important;
+    stroke-width: 3px;
+  }
+  @keyframes pulseLiberoSvg {
+    0% { filter: drop-shadow(0 0 2px rgba(0, 187, 25, 0.8)); }
+    70% { filter: drop-shadow(0 0 10px rgba(0, 187, 25, 0)); }
+    100% { filter: drop-shadow(0 0 2px rgba(0, 187, 25, 0)); }
+  }
 
-  .efficiency-shell {
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-  .efficiency-toolbar {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-  .efficiency-toolbar label {
-    display: block;
-    font-size: 10px;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  .efficiency-toolbar select {
-    width: 100%;
-    background: var(--bg-dark);
-    border: 1px solid var(--border);
-    color: var(--text-input_field);
-    padding: 9px;
-    font-family: var(--font-main);
-    font-size: 12px;
-  }
   .skill-mode-grid,
   .skill-result-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
-  .skill-mode-btn.active {
-    border-color: var(--court-line);
-    color: var(--court-line);
-    background: rgba(255, 255, 255, 0.08);
+  .skill-mode-btn {
+    background: rgba(32, 123, 228, 0.199);
+    border: 1px solid transparent; 
+    color: var(--text-primary);
   }
-  .skill-result-grid {
-    margin-top: 12px;
+  .skill-mode-btn.active {
+    border-color: rgba(31, 10, 223, 0.466);
+    color: var(--court-line);
+    background: rgba(32, 61, 228, 0.363);
+    
   }
   .skill-result-btn {
     min-height: 54px;
@@ -1261,7 +1251,6 @@
     text-align: left;
   }
   @media (max-width: 700px) {
-    .efficiency-toolbar,
     .skill-mode-grid,
     .skill-result-grid {
       grid-template-columns: 1fr 1fr;
@@ -1422,15 +1411,11 @@
       </div>
     </div>
 
-
-
     <!-- Score Buttons -->
     <div class="game-score-actions">
       <button class="btn-big btn-a" style="width:100%;padding:16px;font-size:16px" id="point-btn-A" data-point-team="A" onclick="addPoint('A')">+ POINT — TEAM A</button>
       <button class="btn-big btn-b" style="width:100%;padding:16px;font-size:16px" id="point-btn-B" data-point-team="B" onclick="addPoint('B')">+ POINT — TEAM B</button>
     </div>
-
-
 
     <!-- Combined Teams Panel -->
     <div class="panel game-court-panel">
@@ -1556,14 +1541,19 @@
         <div style="font-size:10px;color:var(--text-muted);margin-top:2px" id="last-touch-team">Tap a player on court</div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:6px;";>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex; gap:6px; margin-bottom: 6px;">
+          <button class="resource-btn btn-neutral" style="flex:1" onclick="handleLiberoAction('A')">Team A L-Swap</button>
+          <button class="resource-btn btn-neutral" style="flex:1" onclick="handleLiberoAction('B')">Team B L-Swap</button>
+        </div>
+
         <div class="court-actions-grid">
           <button class="court-action-btn" data-court-action onclick="recordCourtAction('kill')" disabled>Kill</button>
           <button class="court-action-btn" data-court-action onclick="recordCourtAction('ace')" disabled>Ace</button>
           <button class="court-action-btn" data-court-action onclick="recordCourtAction('block')" disabled>Block</button>
           <button class="court-action-btn error-action" data-court-action onclick="recordCourtAction('attackError')" disabled>Attack Error</button>
-          <button class="court-action-btn error-action" data-court-action onclick="recordCourtAction('serveError')" disabled>Server Error</button>
-          <button class="court-action-btn error-action" data-court-action onclick="recordCourtAction('fault')" disabled>Faults (Violations)</button>
+          <button class="court-action-btn error-action" data-court-action onclick="recordCourtAction('serveError')" disabled>Serve Error</button>
+          <button class="court-action-btn error-action" data-court-action onclick="recordCourtAction('fault')" disabled>Fault (Net/Line)</button>
         </div>
         <div style="display:flex; gap:6px;">
           <button id="clear-touch-btn" onclick="clearTouch()" style="flex:1;">Clear Selection</button>
@@ -1597,65 +1587,59 @@
 
 <!-- ===================== SKILL EFFICIENCY VIEW ===================== -->
 <div id="view-efficiency" class="view">
-  <div class="efficiency-shell">
-    <div class="summary-header">
-      <div>
-        <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Technical Committee</div>
-        <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Skill Efficiency</div>
-      </div>
-      <button class="resource-btn btn-warn" onclick="undoLastSkillEfficiency()">Undo Skill Entry</button>
+  <div class="court-view-header">
+    <div>
+      <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Technical Committee</div>
+      <div style="font-family:var(--font-display);font-size:20px;color:var(--court-line)">Skill Efficiency Tracking</div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Tap a player, select a skill category, and record the result.</div>
+    </div>
+    <div style="display:flex; gap: 8px;">
+      <button class="resource-btn btn-warn" onclick="undoLastSkillEfficiency()">Undo Entry</button>
+      <button class="resource-btn btn-neutral" onclick="toggleCourtSides()">Change Court</button>
+    </div>
+  </div>
+
+  <div id="eff-court-outer">
+    <div id="eff-court-svg-wrap">
+      <svg id="eff-court-svg" viewBox="0 0 560 280" xmlns="http://www.w3.org/2000/svg">
+        <rect width="560" height="280" fill="#0873a7"/>
+        <rect x="20" y="20" width="520" height="240" fill="#ff915c" stroke="#ffffff" stroke-width="2"/>
+        <line x1="280" y1="10" x2="280" y2="270" stroke="#ffffff" stroke-width="3"/>
+        <line x1="280" y1="10" x2="280" y2="20" stroke="#ffffff" stroke-width="4"/>
+        <line x1="280" y1="260" x2="280" y2="270" stroke="#ffffff" stroke-width="4"/>
+        <line x1="193" y1="20" x2="193" y2="260" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <line x1="367" y1="20" x2="367" y2="260" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <text x="140" y="13" text-anchor="middle" fill="#ff915c" font-size="12" font-family="Courier New" font-weight="bold" id="eff-svg-labelA">TEAM A</text>
+        <text x="420" y="13" text-anchor="middle" fill="#00b86b" font-size="12" font-family="Courier New" font-weight="bold" id="eff-svg-labelB">TEAM B</text>
+        <text x="280" y="278" text-anchor="middle" fill="#ffffff" font-size="8" font-family="Courier New">NET</text>
+        <text x="8" y="140" text-anchor="middle" fill="#ffffff" font-size="7" font-family="Courier New" transform="rotate(-90,8,140)">REFEREE</text>
+        <g id="eff-court-players"></g>
+      </svg>
     </div>
 
-    <div class="panel" style="margin-bottom:12px">
-      <div class="efficiency-toolbar">
-        <div>
-          <label>Team</label>
-          <select id="eff-team" onchange="renderEfficiencyPlayerOptions(); renderEfficiencyTables();">
-            <option value="A">Team A</option>
-            <option value="B">Team B</option>
-          </select>
-        </div>
-        <div>
-          <label>Player</label>
-          <select id="eff-player"></select>
-        </div>
-        <div>
-          <label>Set</label>
-          <select id="eff-set-scope" onchange="renderEfficiencyTables()">
-            <option value="match">Whole Match</option>
-            <option value="current">Current Set</option>
-          </select>
-        </div>
+    <div id="eff-court-controls">
+      <div class="last-touch-display">
+        <div class="last-touch-label">Selected Player</div>
+        <div class="last-touch-val" id="eff-touch-val">—</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px" id="eff-touch-team">Tap a player on court</div>
+      </div>
+      <button id="clear-eff-touch-btn" onclick="clearEffTouch()">Clear Selection</button>
+
+      <div class="panel" style="padding: 16px;">
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Skill Category</div>
+        <div class="skill-mode-grid" id="skill-mode-grid"></div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:16px;margin-bottom:8px">Result (Records Entry)</div>
+        <div class="skill-result-grid" id="skill-result-grid"></div>
       </div>
 
-      <div class="skill-mode-grid" id="skill-mode-grid"></div>
-      <div class="skill-result-grid" id="skill-result-grid"></div>
-    </div>
-
-    <div class="summary-grid">
-      <div class="panel">
-        <div class="panel-title">Attack Efficiency</div>
-        <div id="attack-efficiency-table"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">Serve Efficiency</div>
-        <div id="serve-efficiency-table"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">Reception Efficiency</div>
-        <div id="reception-efficiency-table"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">Set Efficiency</div>
-        <div id="set-efficiency-table"></div>
-      </div>
-      <div class="panel" style="grid-column:1 / -1">
+      <div class="panel" style="padding: 16px;">
         <div class="panel-title">Recent Skill Entries</div>
-        <div id="skill-efficiency-log" style="max-height:180px;overflow-y:auto;font-size:11px;color:var(--text-secondary)"></div>
+        <div id="skill-efficiency-log" style="max-height:160px;overflow-y:auto;font-size:11px;color:var(--text-secondary)"></div>
       </div>
     </div>
   </div>
 </div>
+
 
 <!-- ===================== SUMMARY VIEW ===================== -->
 <div id="view-summary" class="view">
@@ -1729,6 +1713,27 @@
       <div class="panel-title">Substitution Log</div>
       <div id="full-sub-log" style="max-height:200px;overflow-y:auto;font-size:11px;color:var(--text-secondary)"></div>
     </div>
+    
+    <div class="panel" style="grid-column: 1 / -1; margin-top: 12px; font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 4px; background:transparent; border:none; box-shadow:none;">
+      <div style="font-family:var(--font-display);font-size:20px;color:var(--court-line);">Efficiency Statistics</div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Attack Efficiency</div>
+      <div id="attack-efficiency-table"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Serve Efficiency</div>
+      <div id="serve-efficiency-table"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Reception Efficiency</div>
+      <div id="reception-efficiency-table"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Set Efficiency</div>
+      <div id="set-efficiency-table"></div>
+    </div>
+
   </div>
 </div>
 
@@ -1846,6 +1851,8 @@ let state = {
   currentSubTeam: null,
   lastTouchPlayer: null,
   lastTouchTeam: null,
+  effTouchPlayer: null,
+  effTouchTeam: null,
   courtSwapped: false,
 };
 
@@ -1947,7 +1954,6 @@ function getCourtLayoutForTeam(team) {
 
 // ===================== TEAM COMPOSITIONS =====================
 const TEAMS_STORAGE_KEY = 'volleyref-team-compositions';
-// Team colors now use native <input type="color"> picker
 
 let editingTeamId = null;
 
@@ -2063,7 +2069,6 @@ function renderTeamEditor(id) {
   `;
 }
 
-// ── Field mutations (save immediately on every keystroke) ──
 function updateTeamName(id, val) {
   const teams = loadAllTeams();
   const team = teams.find(t => t.id === id);
@@ -2134,8 +2139,6 @@ function deleteTeam(id) {
   ]);
 }
 
-// ── Load saved team into Setup tab ──
-// Store full squad keyed by slot so startGame can pick it up
 const _pendingFullSquad = { A: [], B: [] };
 
 function loadSavedTeamIntoSetup(slot, teamId) {
@@ -2148,17 +2151,13 @@ function loadSavedTeamIntoSetup(slot, teamId) {
   const team = teams.find(t => t.id === teamId);
   if (!team) return;
 
-  // Stash full squad so startGame can save it into state
   _pendingFullSquad[slot] = (team.players || []).map(p => String(p.jersey));
 
-  // Fill team name
   const nameEl = document.getElementById('team' + slot + '-name');
   if (nameEl) nameEl.value = team.name;
 
-  // Rebuild position cells with roster-aware datalist
   buildSetupPositionCells(slot, team.players || []);
 
-  // Auto-detect libero
   const liberoPlayer = (team.players || []).find(p => p.libero);
   if (liberoPlayer) {
     const libEl = document.getElementById('team' + slot + '-libero');
@@ -2166,8 +2165,6 @@ function loadSavedTeamIntoSetup(slot, teamId) {
   }
 }
 
-// ── Build position cells: each is a select + optional manual override ──
-// jersey stored/read as string so "06" != "6"
 function jerseyStr(v) { return String(v).trim(); }
 
 function buildSetupPositionCells(slot, roster) {
@@ -2176,7 +2173,6 @@ function buildSetupPositionCells(slot, roster) {
   container.innerHTML = '';
   const listId = 'roster-list-' + slot;
 
-  // Build a shared datalist for this slot
   let dl = document.getElementById(listId);
   if (dl) dl.remove();
   dl = document.createElement('datalist');
@@ -2197,7 +2193,6 @@ function buildSetupPositionCells(slot, roster) {
     label.className = 'player-num-label';
     label.textContent = 'Pos ' + i;
 
-    // Single input with datalist — works as both free-text and dropdown
     const inp = document.createElement('input');
     inp.type = 'text';
     inp.inputMode = 'numeric';
@@ -2207,7 +2202,6 @@ function buildSetupPositionCells(slot, roster) {
     inp.autocomplete = 'off';
     if (roster.length > 0) inp.setAttribute('list', listId);
 
-    // Fix 2: on change, clear other positions in same slot that have same value
     inp.addEventListener('blur', () => deduplicateSetupSlot(slot, i));
 
     wrap.appendChild(label);
@@ -2260,7 +2254,6 @@ function buildSetupPositionCells(slot, roster) {
   }
 }
 
-// Fix 2: if position i just got value X, clear any other position in same slot that already had X
 function deduplicateSetupSlot(slot, changedPos) {
   const changedEl = document.getElementById('p' + slot + changedPos);
   if (!changedEl) return;
@@ -2275,14 +2268,11 @@ function deduplicateSetupSlot(slot, changedPos) {
   }
 }
 
-// Fix 3: read jersey as string (preserves leading zeros like "06" vs "6")
 function getPositionJersey(slot, i) {
   const el = document.getElementById('p' + slot + i);
   if (!el) return String(i);
   return el.value.trim() || String(i);
 }
-
-function syncPositionInput(slot, i) { /* no-op */ }
 
 function escHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -2301,7 +2291,7 @@ function initSetupUI() {
   updatePointsPerSetInfo();
 
   ['A','B'].forEach(t => {
-    buildSetupPositionCells(t, []); // plain inputs until a saved team is loaded
+    buildSetupPositionCells(t, []); 
   });
   refreshSetupDropdowns();
 
@@ -2322,7 +2312,6 @@ function initSetupUI() {
 }
 
 function startGame() {
-  // Read setup
   state.teamA.name = document.getElementById('teamA-name').value || 'Team A';
   state.teamB.name = document.getElementById('teamB-name').value || 'Team B';
   state.teamA.libero = parseInt(document.getElementById('teamA-libero').value) || 0;
@@ -2342,9 +2331,10 @@ function startGame() {
   state.teamB.roster = [...rB];
   state.teamA.rotation = [...rA];
   state.teamB.rotation = [...rB];
-  // Persist full squad for use in New Set config dropdown
+  
   state.teamA.fullSquad = _pendingFullSquad.A.length > 0 ? [..._pendingFullSquad.A] : [...rA];
   state.teamB.fullSquad = _pendingFullSquad.B.length > 0 ? [..._pendingFullSquad.B] : [...rB];
+  
   state.teamA.totalPts = 0;
   state.teamB.totalPts = 0;
   state.teamA.setsWon = 0;
@@ -2353,8 +2343,10 @@ function startGame() {
   state.teamB.toUsed = 0;
   state.teamA.totalSubs = 0;
   state.teamB.totalSubs = 0;
+  
   state.setHistory = [];
   state.allSubsLog = [];
+  state.pointLog = [];
   state.skillEfficiencyLog = [];
   state.playerPoints = {};
   state.playerStats = {};
@@ -2384,6 +2376,9 @@ function resetSetState() {
 
   state.pointLog = [];
   subRegistry = { A: {}, B: {} };
+  
+  state.effTouchPlayer = null;
+  state.effTouchTeam = null;
 }
 
 function addPoint(team, options = {}) {
@@ -2407,13 +2402,11 @@ function addPoint(team, options = {}) {
   let rotatedTeam = null;
 
   if (team !== state.serving) {
-    // Side out — rotate receiving team
     rotateTeamState(team);
     state.serving = team;
-    rotatedTeam = team; // Track this so we can un-rotate if undone
+    rotatedTeam = team; 
   }
 
-  // Push all action data so we can accurately reverse it later
   state.pointLog.push({ 
       scoreA: state.scoreA, 
       scoreB: state.scoreB, 
@@ -2473,18 +2466,15 @@ function undoLastPoint() {
   if (state.pointLog.length === 0) { showAlert('Nothing to undo', 'warn'); return; }
   const last = state.pointLog.pop();
   
-  // 1. Revert Team Score
   state.scoreA = last.scoreA - (last.team === 'A' ? 1 : 0);
   state.scoreB = last.scoreB - (last.team === 'B' ? 1 : 0);
   if (last.team === 'A') state.teamA.totalPts = Math.max(0, state.teamA.totalPts - 1);
   else state.teamB.totalPts = Math.max(0, state.teamB.totalPts - 1);
 
-  // 2. Revert Player Score (Statistics)
   if (last.scorerInfo) {
       const key = getPlayerKey(last.scorerInfo.team, last.scorerInfo.jersey);
       if (state.playerPoints[key]) {
           state.playerPoints[key]--;
-          // Remove the player from the leaderboard if their points drop back to 0
           if (state.playerPoints[key] <= 0) {
               delete state.playerPoints[key];
           }
@@ -2492,10 +2482,8 @@ function undoLastPoint() {
   }
   (last.statEvents || []).forEach(event => decrementPlayerStat(event.team, event.jersey, event.stat));
 
-  // 3. Revert Serving & Auto-Rotations
   state.serving = last.wasServing;
   if (last.rotatedTeam) {
-      // If a side-out caused an auto-rotation, forcefully rotate them backwards
       performRotation(last.rotatedTeam, 'back');
   }
 
@@ -2555,17 +2543,14 @@ function endMatch() {
 function performRotation(team, dir) {
   const t = getTeamState(team);
   
-  // AUTO LIBERO OUT LOGIC: Prevent Libero from entering front row
   if (t.liberoStatus && t.liberoStatus.in) {
     const liberoIdx = t.rotation.findIndex(j => String(j) === String(t.libero));
     
-    // If moving forward, Pos 5 (index 4) shifts to Pos 4 (Front Row)
     if (dir === 'fwd' && liberoIdx === 4) {
       showAlert(`Libero rotated to front row! Auto-swapped for #${t.liberoStatus.replaced}.`, 'warn');
       t.rotation[liberoIdx] = t.liberoStatus.replaced;
       t.liberoStatus = { in: false, replaced: null };
     } 
-    // If moving backward, Pos 1 (index 0) shifts to Pos 2 (Front Row)
     else if (dir === 'back' && liberoIdx === 0) {
       showAlert(`Libero rotated to front row! Auto-swapped for #${t.liberoStatus.replaced}.`, 'warn');
       t.rotation[liberoIdx] = t.liberoStatus.replaced;
@@ -2573,7 +2558,6 @@ function performRotation(team, dir) {
     }
   }
 
-  // Perform the actual array shift
   if (dir === 'fwd') {
     const first = t.rotation.shift();
     t.rotation.push(first);
@@ -2600,7 +2584,6 @@ function toggleCourtSides() {
 }
 
 function updateGameCourtSides() {
-  // ── Score header: swap only the score blocks, center stays in the middle ──
   const scoreHeader = document.getElementById('score-header');
   if (scoreHeader) {
     const blockA = scoreHeader.querySelector('[data-score-team="A"]');
@@ -2611,18 +2594,15 @@ function updateGameCourtSides() {
       blockB.style.gridColumn = '';
       center.style.gridColumn = '';
       if (state.courtSwapped) {
-        // Order: B | center | A
-        scoreHeader.insertBefore(blockB, center); // B goes before center
-        scoreHeader.appendChild(blockA);           // A goes after center
+        scoreHeader.insertBefore(blockB, center); 
+        scoreHeader.appendChild(blockA);           
       } else {
-        // Order: A | center | B
-        scoreHeader.insertBefore(blockA, center); // A goes before center
-        scoreHeader.appendChild(blockB);           // B goes after center
+        scoreHeader.insertBefore(blockA, center); 
+        scoreHeader.appendChild(blockB);           
       }
     }
   }
 
-  // ── Point buttons: physically reorder A/B buttons ──
   const scoreActions = document.querySelector('.game-score-actions');
   if (scoreActions) {
     const btnA = scoreActions.querySelector('[data-point-team="A"]');
@@ -2631,21 +2611,19 @@ function updateGameCourtSides() {
       btnA.style.gridColumn = '';
       btnB.style.gridColumn = '';
       if (state.courtSwapped) {
-        scoreActions.appendChild(btnA); // B, A
+        scoreActions.appendChild(btnA); 
       } else {
-        scoreActions.insertBefore(btnA, btnB); // A, B
+        scoreActions.insertBefore(btnA, btnB); 
       }
     }
   }
 
-  // ── Court panel: physically swap the two team sides around the net divider ──
   const courtPanel = document.querySelector('.game-court-panel');
   if (courtPanel) {
     const sideA = courtPanel.querySelector('[data-game-side="A"]');
     const sideB = courtPanel.querySelector('[data-game-side="B"]');
     const netDiv = courtPanel.querySelector('.game-net-divider');
     if (sideA && sideB && netDiv) {
-      // Clear any lingering inline styles from old code
       sideA.style.gridColumn = '';
       sideB.style.gridColumn = '';
       sideA.style.textAlign = '';
@@ -2660,30 +2638,30 @@ function updateGameCourtSides() {
       });
 
       if (state.courtSwapped) {
-        // Order: B | NET | A
-        courtPanel.insertBefore(sideB, netDiv); // sideB first
-        courtPanel.appendChild(sideA);           // sideA last
+        courtPanel.insertBefore(sideB, netDiv); 
+        courtPanel.appendChild(sideA);           
       } else {
-        // Order: A | NET | B
-        courtPanel.insertBefore(sideA, netDiv); // sideA first
-        courtPanel.appendChild(sideB);           // sideB last
+        courtPanel.insertBefore(sideA, netDiv); 
+        courtPanel.appendChild(sideB);           
       }
     }
   }
 
-  // ── Team name labels (always reflect actual team names) ──
   const nameA = document.getElementById('combined-nameA');
   const nameB = document.getElementById('combined-nameB');
   if (nameA) nameA.textContent = state.teamA.name;
   if (nameB) nameB.textContent = state.teamB.name;
 
-  // ── SVG court labels ──
   const labelA = document.getElementById('svg-labelA');
   const labelB = document.getElementById('svg-labelB');
   if (labelA) labelA.setAttribute('x', state.courtSwapped ? '420' : '140');
   if (labelB) labelB.setAttribute('x', state.courtSwapped ? '140' : '420');
 
-  // ── Button label ──
+  const effLabelA = document.getElementById('eff-svg-labelA');
+  const effLabelB = document.getElementById('eff-svg-labelB');
+  if (effLabelA) effLabelA.setAttribute('x', state.courtSwapped ? '420' : '140');
+  if (effLabelB) effLabelB.setAttribute('x', state.courtSwapped ? '140' : '420');
+
   const btnText = state.courtSwapped ? '⇄ Court: Swapped' : '⇄ Change Court';
   const gameBtn = document.getElementById('game-change-court-btn');
   const courtBtn = document.getElementById('court-change-court-btn');
@@ -2813,7 +2791,6 @@ function confirmSub() {
     return;
   }
 
-  // Check: can't re-enter in same set (simplified FIVB: a player can only return once, replaced by same)
   const reg = subRegistry[team];
   const outBuddy = reg[outJersey];
   const inBuddy = reg[inJersey];
@@ -2829,16 +2806,12 @@ function confirmSub() {
     msg.innerHTML = '<span style="color:var(--danger)">Invalid: #' + inJersey + ' can only replace #' + (reg[inJersey]||'—') + ' per FIVB rules.</span>';
     return;
   }
-  if (reg[outJersey] && reg[outJersey] === inJersey) {
-    // reverse sub - allowed
-  }
 
   if (t.subsUsed >= state.maxSubs) {
     msg.innerHTML = '<span style="color:var(--danger)">Substitution limit reached!</span>';
     return;
   }
 
-  // Do the sub
   const idx = findRotationIndex(t.rotation, outJersey);
   if (idx === -1) {
     msg.innerHTML = '<span style="color:var(--danger)">Player #' + outJersey + ' is not currently on court.</span>';
@@ -2880,13 +2853,11 @@ function openSetConfigModal() {
     const container = document.getElementById('next-team' + team + '-players');
     if (!container) return;
 
-    // Build datalist from full roster (all jerseys that have ever been in this team)
     const listId = 'next-roster-list-' + team;
     let dl = document.getElementById(listId);
     if (dl) dl.remove();
     dl = document.createElement('datalist');
     dl.id = listId;
-    // fullSquad = complete squad from Teams tab; falls back to current rotation
     const pool = (t.fullSquad && t.fullSquad.length > 0) ? t.fullSquad : (t.roster || rotation);
     pool.forEach(jersey => {
       const opt = document.createElement('option');
@@ -2895,7 +2866,6 @@ function openSetConfigModal() {
     });
     container.appendChild(dl);
 
-    // Wire datalist to each input and set current rotation value
     rotation.forEach((jersey, idx) => {
       const inp = document.getElementById('n' + team + (idx + 1));
       if (inp) {
@@ -2918,17 +2888,15 @@ function readNextSetLineup(team) {
     const el = document.getElementById('n' + team + i);
     const raw = el ? el.value.trim() : '';
     if (raw === '') return null;
-    jerseys.push(raw); // keep as string — "06" !== "6"
+    jerseys.push(raw); 
   }
   return jerseys;
 }
 
 function validateUniqueLineup(lineup) {
-  // string comparison so "06" and "6" are different
   return new Set(lineup.map(String)).size === lineup.length;
 }
 
-// Fix 3 + 2: deduplicate new-set config inputs
 function deduplicateNextSetSlot(team, changedPos) {
   const changedEl = document.getElementById('n' + team + changedPos);
   if (!changedEl) return;
@@ -2974,22 +2942,37 @@ function confirmNextSetSetup() {
 }
 
 // ===================== COURT / TOUCH TRACKING =====================
-function renderCourt() {
-  const svg = document.getElementById('court-players');
-  svg.innerHTML = '';
-  state.lastTouchPlayer = state.lastTouchPlayer || null;
+function renderCourts() {
+  const svgMain = document.getElementById('court-players');
+  const svgEff = document.getElementById('eff-court-players');
+  if (svgMain) svgMain.innerHTML = '';
+  if (svgEff) svgEff.innerHTML = '';
 
-  // Update dynamic team name labels on SVG
+  state.lastTouchPlayer = state.lastTouchPlayer || null;
+  state.effTouchPlayer = state.effTouchPlayer || null;
+
   const lblA = document.getElementById('svg-labelA');
   const lblB = document.getElementById('svg-labelB');
   if (lblA) lblA.textContent = (state.teamA.name || 'Team A').toUpperCase();
   if (lblB) lblB.textContent = (state.teamB.name || 'Team B').toUpperCase();
+  
+  const effLblA = document.getElementById('eff-svg-labelA');
+  const effLblB = document.getElementById('eff-svg-labelB');
+  if (effLblA) effLblA.textContent = (state.teamA.name || 'Team A').toUpperCase();
+  if (effLblB) effLblB.textContent = (state.teamB.name || 'Team B').toUpperCase();
 
   const positionsA = getCourtPositions('A');
-  positionsA.forEach(p => drawPlayerOnCourt(svg, p.x, p.y, p.jersey, 'A', p.isLibero));
-
   const positionsB = getCourtPositions('B');
-  positionsB.forEach(p => drawPlayerOnCourt(svg, p.x, p.y, p.jersey, 'B', p.isLibero));
+
+  positionsA.forEach(p => {
+    if (svgMain) drawPlayerOnCourt(svgMain, p.x, p.y, p.jersey, 'A', p.isLibero, p.posIdx, 'main');
+    if (svgEff) drawPlayerOnCourt(svgEff, p.x, p.y, p.jersey, 'A', p.isLibero, p.posIdx, 'eff');
+  });
+
+  positionsB.forEach(p => {
+    if (svgMain) drawPlayerOnCourt(svgMain, p.x, p.y, p.jersey, 'B', p.isLibero, p.posIdx, 'main');
+    if (svgEff) drawPlayerOnCourt(svgEff, p.x, p.y, p.jersey, 'B', p.isLibero, p.posIdx, 'eff');
+  });
 }
 
 function getCourtPositions(team) {
@@ -3003,17 +2986,37 @@ function getCourtPositions(team) {
   }));
 }
 
-function drawPlayerOnCourt(svg, x, y, jersey, team, isLibero) {
+function drawPlayerOnCourt(svg, x, y, jersey, team, isLibero, posIdx, courtType) {
   const color = team === 'A' ? '#0057ff' : '#00b86b';
   const liberoColor = '#9060d0';
   const fill = isLibero ? liberoColor : color;
-  const isSelected = normalizeJerseyValue(state.lastTouchPlayer) === normalizeJerseyValue(jersey) && state.lastTouchTeam === team;
+  
+  let isSelected = false;
+  if (courtType === 'main') {
+      isSelected = normalizeJerseyValue(state.lastTouchPlayer) === normalizeJerseyValue(jersey) && state.lastTouchTeam === team;
+  } else {
+      isSelected = normalizeJerseyValue(state.effTouchPlayer) === normalizeJerseyValue(jersey) && state.effTouchTeam === team;
+  }
+  
+  const isSelectable = liberoSelectionMode === team && (posIdx === 0 || posIdx === 4 || posIdx === 5);
   const r = 25;
 
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-  g.setAttribute('class', 'player-circle' + (isSelected ? ' selected' : ''));
+  let classNames = 'player-circle';
+  if (isSelected) classNames += ' selected';
+  if (isSelectable) classNames += ' libero-selectable';
+  
+  g.setAttribute('class', classNames);
   g.style.cursor = 'pointer';
-  g.onclick = () => selectPlayerTouch(jersey, team);
+  
+  g.onclick = () => {
+    if (isSelectable) {
+      executeLiberoSwap(team, posIdx);
+    } else {
+      if (courtType === 'main') selectPlayerTouch(jersey, team);
+      else selectEffPlayerTouch(jersey, team);
+    }
+  };
 
   const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   circle.setAttribute('cx', x);
@@ -3047,7 +3050,7 @@ function selectPlayerTouch(jersey, team) {
   document.getElementById('last-touch-val').style.color = team === 'A' ? 'var(--team-a)' : 'var(--team-b)';
   document.getElementById('last-touch-team').textContent = tName;
   setCourtActionButtonsDisabled(false);
-  renderCourt();
+  renderCourts();
 }
 
 function setCourtActionButtonsDisabled(disabled) {
@@ -3061,7 +3064,32 @@ function clearTouch() {
   document.getElementById('last-touch-val').style.color = 'var(--text-primary)';
   document.getElementById('last-touch-team').textContent = 'Tap a player on court';
   setCourtActionButtonsDisabled(true);
-  renderCourt();
+  renderCourts();
+}
+
+function selectEffPlayerTouch(jersey, team) {
+  state.effTouchPlayer = jersey;
+  state.effTouchTeam = team;
+  const tName = team === 'A' ? state.teamA.name : state.teamB.name;
+  document.getElementById('eff-touch-val').textContent = '#' + jersey;
+  document.getElementById('eff-touch-val').style.color = team === 'A' ? 'var(--team-a)' : 'var(--team-b)';
+  document.getElementById('eff-touch-team').textContent = tName;
+  setEffActionButtonsDisabled(false);
+  renderCourts();
+}
+
+function clearEffTouch() {
+  state.effTouchPlayer = null;
+  state.effTouchTeam = null;
+  document.getElementById('eff-touch-val').textContent = '—';
+  document.getElementById('eff-touch-val').style.color = 'var(--text-primary)';
+  document.getElementById('eff-touch-team').textContent = 'Tap a player on court';
+  setEffActionButtonsDisabled(true);
+  renderCourts();
+}
+
+function setEffActionButtonsDisabled(disabled) {
+  document.querySelectorAll('.skill-result-btn').forEach(btn => { btn.disabled = disabled; });
 }
 
 const COURT_ACTIONS = {
@@ -3069,7 +3097,7 @@ const COURT_ACTIONS = {
   ace: { label: 'Ace', stat: 'aces', pointTo: 'selected' },
   block: { label: 'Block', stat: 'blocks', pointTo: 'selected' },
   attackError: { label: 'Attack Error', stat: 'attackErrors', pointTo: 'opponent' },
-  serveError: { label: 'Server Error', stat: 'serveErrors', pointTo: 'opponent' },
+  serveError: { label: 'Serve Error', stat: 'serveErrors', pointTo: 'opponent' },
   fault: { label: 'Fault', stat: 'faults', pointTo: 'opponent' }
 };
 
@@ -3165,22 +3193,6 @@ const EFFICIENCY_SKILLS = {
   }
 };
 
-function getEfficiencyRoster(team) {
-  const t = getTeamState(team);
-  const pool = (t.fullSquad && t.fullSquad.length > 0) ? t.fullSquad : (t.roster && t.roster.length > 0 ? t.roster : t.rotation);
-  return [...new Set(pool.map(j => normalizeJerseyValue(j)).filter(Boolean))];
-}
-
-function renderEfficiencyPlayerOptions() {
-  const teamSel = document.getElementById('eff-team');
-  const playerSel = document.getElementById('eff-player');
-  if (!teamSel || !playerSel) return;
-  const previous = playerSel.value;
-  const roster = getEfficiencyRoster(teamSel.value);
-  playerSel.innerHTML = roster.map(j => `<option value="${escHtml(j)}">#${escHtml(j)}</option>`).join('');
-  if (roster.includes(previous)) playerSel.value = previous;
-}
-
 function renderEfficiencyControls() {
   const modeGrid = document.getElementById('skill-mode-grid');
   const resultGrid = document.getElementById('skill-result-grid');
@@ -3190,8 +3202,10 @@ function renderEfficiencyControls() {
   ).join('');
 
   const skill = EFFICIENCY_SKILLS[selectedEfficiencySkill];
+  const disabledAttr = (state.effTouchPlayer) ? '' : ' disabled';
+
   resultGrid.innerHTML = skill.results.map(result =>
-    `<button class="resource-btn btn-success skill-result-btn" onclick="recordSkillEfficiency('${result.value}')">${result.label}</button>`
+    `<button class="resource-btn btn-success skill-result-btn" onclick="recordSkillEfficiency('${result.value}')"${disabledAttr}>${result.label}</button>`
   ).join('');
 }
 
@@ -3202,9 +3216,9 @@ function selectEfficiencySkill(skill) {
 
 function recordSkillEfficiency(result) {
   if (!state.gameStarted) { showAlert('Start match first!', 'warn'); return; }
-  const team = document.getElementById('eff-team').value;
-  const player = normalizeJerseyValue(document.getElementById('eff-player').value);
-  if (!player) { showAlert('Select a player first.', 'warn'); return; }
+  const team = state.effTouchTeam;
+  const player = normalizeJerseyValue(state.effTouchPlayer);
+  if (!player || !team) { showAlert('Select a player on the court first.', 'warn'); return; }
   const skill = EFFICIENCY_SKILLS[selectedEfficiencySkill];
   const resultMeta = skill.results.find(r => r.value === result);
   if (!resultMeta) return;
@@ -3287,7 +3301,7 @@ function formatEff(num, den) {
 function renderEfficiencyTable(skill, elementId) {
   const el = document.getElementById(elementId);
   if (!el) return;
-  const scope = document.getElementById('eff-set-scope')?.value || 'match';
+  const scope = 'match'; 
   const rows = getEfficiencyRows(skill, scope);
   if (rows.length === 0) {
     el.innerHTML = '<div style="color:var(--text-muted);font-size:11px">No entries yet</div>';
@@ -3335,11 +3349,6 @@ function renderEfficiencyTables() {
 }
 
 function renderEfficiencyView() {
-  const teamSel = document.getElementById('eff-team');
-  if (!teamSel) return;
-  teamSel.options[0].textContent = state.teamA.name;
-  teamSel.options[1].textContent = state.teamB.name;
-  renderEfficiencyPlayerOptions();
   renderEfficiencyControls();
   renderEfficiencyTables();
 }
@@ -3383,7 +3392,7 @@ function renderAll() {
   renderPointLog();
 
   // Court
-  renderCourt();
+  renderCourts();
   updateCourtScores();
   renderPlayerStats();
   updateGameCourtSides();
@@ -3398,7 +3407,6 @@ function renderRotation(team) {
   const gridLayout = getCourtLayoutForTeam(team).rotationGrid;
   el.innerHTML = '';
 
-  // Add col headers as first row using CSS grid column span trick via separate divs
   const hdr1 = document.createElement('div');
   hdr1.style.cssText = 'font-size:8px;color:var(--text-muted);text-align:center;align-self:end;padding-bottom:2px;letter-spacing:1px;';
   hdr1.textContent = gridLayout.headers[0];
@@ -3434,7 +3442,6 @@ function renderRotation(team) {
     el.appendChild(div);
   });
 
-  // Update grid to include header row
   el.style.gridTemplateRows = 'auto repeat(3, 1fr)';
 }
 
@@ -3506,7 +3513,6 @@ function getTeamSkillStats(team) {
       const serveErrors = stats.serveErrors || 0;
       const faults = stats.faults || 0;
       
-      // Aggregate all errors into a single metric
       const totalErrors = attackErrors + serveErrors + faults;
 
       return {
@@ -3652,6 +3658,9 @@ function updateSummary() {
       Set ${s.set} | #${s.in} IN for #${s.out} @ ${s.score}
     </div>`
   ).join('') || '<div style="color:var(--text-muted)">No substitutions recorded</div>';
+  
+  // Renders the efficiency tables inside the Summary Tab
+  renderEfficiencyTables();
 }
 
 // ===================== MODAL =====================
@@ -3703,7 +3712,7 @@ function switchView(name) {
     if ((t.getAttribute('onclick') || '').includes("'" + name + "'")) t.classList.add('active');
   });
   if (name === 'summary') updateSummary();
-  if (name === 'court') { renderCourt(); updateCourtScores(); renderPlayerStats(); }
+  if (name === 'court') { renderCourts(); updateCourtScores(); renderPlayerStats(); }
   if (name === 'efficiency') renderEfficiencyView();
   if (name === 'teams') { renderTeamsList(); if (editingTeamId) renderTeamEditor(editingTeamId); }
   if (name === 'setup') refreshSetupDropdowns();
@@ -3724,8 +3733,8 @@ function generateFreshTeamState(existingTeamState) {
     setsWon: 0,
     toUsed: 0,
     totalSubs: 0,
-    liberoStatus: { in: false, replaced: null }, // Added missing property
-    sanctions: []                                // Added missing property
+    liberoStatus: { in: false, replaced: null }, 
+    sanctions: []                                
   };
 }
 
@@ -3742,6 +3751,7 @@ function resetAll() {
          maxSubs: state.maxSubs, setsToWin: state.setsToWin, ptsPerSet: getPointsTargetForSet(1),
          gameStarted: true, matchEnded: false, summaryExported: false,
          currentSubTeam: null, lastTouchPlayer: null, lastTouchTeam: null,
+         effTouchPlayer: null, effTouchTeam: null,
          courtSwapped: state.courtSwapped
        };
        subRegistry = { A: {}, B: {} };
@@ -3761,10 +3771,8 @@ function handleLiberoAction(team) {
   }
 
   if (t.liberoStatus.in) {
-    // If already in, clicking it pulls them out automatically
     swapLiberoOut(team);
   } else {
-    // Toggle selection mode to pick a back-row player
     if (liberoSelectionMode === team) {
       liberoSelectionMode = null;
       renderAll();
@@ -3778,7 +3786,6 @@ function handleLiberoAction(team) {
 
 function executeLiberoSwap(team, posIdx) {
   const t = getTeamState(team);
-  // Restrict to back-row positions: Pos 1 (0), Pos 5 (4), Pos 6 (5)
   if (posIdx !== 0 && posIdx !== 4 && posIdx !== 5) {
     showAlert('Libero can only replace back-row players!', 'danger');
     return;
