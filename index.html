@@ -1147,6 +1147,14 @@
   }
   @media (max-width: 560px) {
     .players-setup { grid-template-columns: repeat(3, 1fr); }
+    #court-controls, #eff-court-controls { grid-template-columns: 1fr; }
+    #court-controls > *,
+    #eff-court-controls > * {
+      grid-column: 1 / -1;
+    }
+    #eff-court-controls .panel {
+      padding: 12px !important;
+    }
     #topbar { padding: 10px 12px; }
     .nav-tab { flex: 1 1 calc(50% - 4px); text-align: center; }
     .team-name-val { font-size: 16px; }
@@ -1201,8 +1209,6 @@
     border: 1px solid transparent; 
     color: var(--text-primary);
     min-height: 54px;
-    max-width: 100px;
-    font-size: 10px;
   }
   .skill-mode-btn.active {
     border-color: rgba(31, 10, 223, 0.466);
@@ -1214,8 +1220,7 @@
     border: 1px solid transparent;
     border-color: #16bb00;
     min-height: 54px;
-    max-width: 100px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .efficiency-table {
     width: 100%;
@@ -2149,22 +2154,6 @@ function loadSavedTeamIntoSetup(slot, teamId) {
 
 function jerseyStr(v) { return String(v).trim(); }
 
-function closeSetupPlayerPickers(except = null) {
-  document.querySelectorAll('.setup-player-picker.open').forEach(el => {
-    if (el !== except) el.classList.remove('open');
-  });
-  document.querySelectorAll('.setup-panel.has-open-picker').forEach(panel => {
-    if (!except || panel !== except.closest('.setup-panel')) panel.classList.remove('has-open-picker');
-  });
-}
-
-function openSetupPlayerPicker(pickerWrap) {
-  closeSetupPlayerPickers(pickerWrap);
-  pickerWrap.classList.add('open');
-  const panel = pickerWrap.closest('.setup-panel');
-  if (panel) panel.classList.add('has-open-picker');
-}
-
 function buildSetupPositionCells(slot, roster) {
   const container = document.getElementById('team' + slot + '-players');
   if (!container) return;
@@ -2219,19 +2208,30 @@ function buildSetupPositionCells(slot, roster) {
         optionBtn.addEventListener('click', () => {
           inp.value = jersey;
           pickerWrap.classList.remove('open');
-          const panel = pickerWrap.closest('.setup-panel');
-          if (panel) panel.classList.remove('has-open-picker');
           deduplicateSetupSlot(slot, i);
           inp.focus();
         });
         pickerMenu.appendChild(optionBtn);
       });
 
-      inp.addEventListener('focus', () => openSetupPlayerPicker(pickerWrap));
-      inp.addEventListener('click', () => openSetupPlayerPicker(pickerWrap));
-      inp.addEventListener('input', () => closeSetupPlayerPickers());
+      const pickerBtn = document.createElement('button');
+      pickerBtn.type = 'button';
+      pickerBtn.className = 'player-picker-trigger';
+      pickerBtn.textContent = 'v';
+      pickerBtn.setAttribute('aria-label', 'Choose player for position ' + i);
+      pickerBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        document.querySelectorAll('.setup-player-picker.open').forEach(el => {
+          if (el !== pickerWrap) el.classList.remove('open');
+        });
+        pickerWrap.classList.toggle('open');
+        inp.focus();
+      });
+      inp.addEventListener('focus', () => pickerWrap.classList.add('open'));
+      inp.addEventListener('input', () => pickerWrap.classList.remove('open'));
 
       pickerWrap.appendChild(inp);
+      pickerWrap.appendChild(pickerBtn);
       pickerWrap.appendChild(pickerMenu);
       wrap.appendChild(pickerWrap);
     } else {
@@ -3675,7 +3675,7 @@ document.getElementById('modal-overlay').onclick = function(e) {
 
 document.addEventListener('click', function(e) {
   if (e.target.closest('.setup-player-picker')) return;
-  closeSetupPlayerPickers();
+  document.querySelectorAll('.setup-player-picker.open').forEach(el => el.classList.remove('open'));
 });
 
 // ===================== ALERT =====================
