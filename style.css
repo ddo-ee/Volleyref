@@ -635,6 +635,7 @@
   .setup-panel h3.team-b-h { color: var(--team-b); }
   .setup-panel {
     position: relative;
+    z-index: 1;
   }
   .setup-panel.has-open-picker {
     z-index: 120;
@@ -1230,5 +1231,170 @@
     .skill-mode-grid,
     .skill-result-grid {
       grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  /* ===================== PRINT ===================== */
+  @media print {
+    body {
+      background: #ffffff !important;
+      color: #000000 !important;
+      font-size: 11px !important;
+    }
+
+    /* Hide interactive elements */
+    #topbar,
+    #nav-tabs,
+    .btn-big,
+    .resource-btn,
+    .court-action-btn,
+    #clear-touch-btn,
+    #clear-eff-touch-btn,
+    #alert-bar,
+    #modal-overlay,
+    #sub-overlay,
+    #set-config-overlay,
+    .setup-header button,
+    .summary-header button,
+    .last-touch-display,
+    .court-actions-grid,
+    .game-control-row {
+      display: none !important;
+    }
+
+    /* Only show the summary view */
+    .view {
+      display: none !important;
+    }
+    #view-summary {
+      display: block !important;
+    }
+
+    /* Reset layout for paper */
+    #view-summary {
+      padding: 0 !important;
+      animation: none !important;
+    }
+
+    .summary-header {
+      margin-bottom: 8px !important;
+    }
+
+    .summary-header > div:first-child div {
+      color: #000000 !important;
+    }
+
+    .summary-grid {
+      display: block !important;
+    }
+
+    .panel,
+    .setup-panel,
+    .teams-list-panel,
+    .team-editor-panel,
+    .last-touch-display,
+    .court-score-card,
+    .team-score-block,
+    #modal-box,
+    #sub-overlay > div,
+    #set-config-overlay > div {
+      background: #ffffff !important;
+      border: 1px solid #cccccc !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      padding: 8px !important;
+      margin-bottom: 8px !important;
+      break-inside: avoid;
+    }
+
+    .panel-title {
+      color: #333333 !important;
+      border-bottom: 1px solid #cccccc !important;
+      font-size: 10px !important;
+    }
+
+    .stat-row,
+    .set-history-row,
+    .sub-item,
+    .log-item {
+      border-bottom: 1px solid #eeeeee !important;
+      padding: 3px 0 !important;
+    }
+
+    .stat-label,
+    .stat-val-a,
+    .stat-val-b {
+      color: #000000 !important;
+    }
+
+    .team-a,
+    .team-b,
+    .team-a-h,
+    .team-b-h {
+      color: #000000 !important;
+    }
+
+    .leaderboard-team-title {
+      color: #000000 !important;
+    }
+
+    .leaderboard-split {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 8px !important;
+    }
+
+    .set-history {
+      margin-top: 4px !important;
+    }
+
+    .efficiency-table {
+      font-size: 10px !important;
+    }
+
+    .efficiency-table th,
+    .efficiency-table td {
+      border-bottom: 1px solid #eeeeee !important;
+      padding: 3px 2px !important;
+      color: #000000 !important;
+    }
+
+    .efficiency-table th {
+      font-weight: bold !important;
+    }
+
+    #winner-banner {
+      background: #ffffff !important;
+      border: 2px solid #000000 !important;
+      padding: 8px !important;
+      margin-bottom: 8px !important;
+    }
+
+    #winner-banner div {
+      color: #000000 !important;
+    }
+
+    .summary-meta {
+      font-size: 11px !important;
+    }
+
+    .summary-meta-item {
+      border-bottom: 1px solid #eeeeee !important;
+    }
+
+    #full-sub-log {
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
+    /* Page breaks between sections */
+    .panel[style*="grid-column: 1 / -1"] {
+      page-break-before: always;
+    }
+
+    /* Remove scrollbar styling in print */
+    ::-webkit-scrollbar {
+      display: none !important;
     }
   }

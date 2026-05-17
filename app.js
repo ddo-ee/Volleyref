@@ -463,24 +463,13 @@ function buildSetupPositionCells(slot, roster) {
         pickerMenu.appendChild(optionBtn);
       });
 
-      const pickerBtn = document.createElement('button');
-      pickerBtn.type = 'button';
-      pickerBtn.className = 'player-picker-trigger';
-      pickerBtn.textContent = 'v';
-      pickerBtn.setAttribute('aria-label', 'Choose player for position ' + i);
-      pickerBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        document.querySelectorAll('.setup-player-picker.open').forEach(el => {
-          if (el !== pickerWrap) el.classList.remove('open');
-        });
-        pickerWrap.classList.toggle('open');
-        inp.focus();
+      inp.addEventListener('focus', () => {
+        pickerWrap.classList.add('open');
+        pickerWrap.closest('.setup-panel').classList.add('has-open-picker');
       });
-      inp.addEventListener('focus', () => pickerWrap.classList.add('open'));
       inp.addEventListener('input', () => pickerWrap.classList.remove('open'));
 
       pickerWrap.appendChild(inp);
-      pickerWrap.appendChild(pickerBtn);
       pickerWrap.appendChild(pickerMenu);
       wrap.appendChild(pickerWrap);
     } else {
@@ -1928,7 +1917,10 @@ document.getElementById('modal-overlay').onclick = function(e) {
 
 document.addEventListener('click', function(e) {
   if (e.target.closest('.setup-player-picker')) return;
-  document.querySelectorAll('.setup-player-picker.open').forEach(el => el.classList.remove('open'));
+  document.querySelectorAll('.setup-player-picker.open').forEach(el => {
+    el.classList.remove('open');
+    el.closest('.setup-panel').classList.remove('has-open-picker');
+  });
 });
 
 // ===================== ALERT =====================
