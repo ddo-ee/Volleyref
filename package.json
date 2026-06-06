@@ -1,0 +1,9 @@
+{
+  "name": "aquila",
+  "version": "1.0.0",
+  "description": "Aquila Volleyball Committee System",
+  "main": "server.js",
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}

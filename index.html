@@ -3,25 +3,255 @@
 <head>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="VolleyRef">
+<meta name="apple-mobile-web-app-title" content="Aquila">
 <meta name="theme-color" content="#0d1f17">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VolleyRef — Second Referee System</title>
+<title>Aquila Volleyball Committee System</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<!-- SIDE PANEL -->
+<div id="side-panel" class="side-panel-closed">
+  <div id="side-panel-content">
+    <div class="side-panel-header">
+      <div class="side-panel-title">Aquila</div>
+    </div>
+    <div class="side-nav-item" id="side-nav-admin" onclick="switchMenu('admin'); switchView('config'); closeSidePanel();">
+      <span class="side-nav-icon">⚙</span> Admin
+    </div>
+    <div class="side-nav-item active" id="side-nav-committee" onclick="switchMenu('committee'); switchView('setup'); closeSidePanel();">
+      <span class="side-nav-icon">🏐</span> Technical Committee
+    </div>
+  </div>
+</div>
+<div id="side-panel-overlay" onclick="closeSidePanel()"></div>
+
 <!-- TOP BAR -->
 <div id="topbar">
-  <div class="logo">VOLLEY<span>REF</span></div>
-  <div id="nav-tabs">
-    <button class="nav-tab active" onclick="switchView('setup')">Setup</button>
-    <button class="nav-tab" onclick="switchView('game')">Game</button>
-    <button class="nav-tab" onclick="switchView('court')">Court</button>
-    <button class="nav-tab" onclick="switchView('efficiency')">Skill Efficiency</button>
-    <button class="nav-tab" onclick="switchView('summary')">Statistics</button>
-    <button class="nav-tab" onclick="switchView('teams')">Teams</button>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button id="side-toggle" onclick="toggleSidePanel()">☰</button>
+    <div class="logo">Aquila</div>
+  </div>
+
+  <!-- Admin Tabs -->
+  <div id="admin-tabs" class="tab-bar tab-bar-hidden">
+    <button class="nav-tab" data-tab="config" onclick="switchView('config')">Tournament Config</button>
+    <button class="nav-tab" data-tab="tteams" onclick="switchView('tteams')">Teams</button>
+    <button class="nav-tab" data-tab="schedule" onclick="switchView('schedule')">Schedule</button>
+    <button class="nav-tab" data-tab="standings" onclick="switchView('standings')">Standings</button>
+    <button class="nav-tab" data-tab="tstats" onclick="switchView('tstats')">Tournament Stats</button>
+  </div>
+
+  <!-- Committee Tabs -->
+  <div id="committee-tabs" class="tab-bar">
+    <button class="nav-tab active" data-tab="setup" onclick="switchView('setup')">Setup</button>
+    <button class="nav-tab" data-tab="game" onclick="switchView('game')">Game</button>
+    <button class="nav-tab" data-tab="court" onclick="switchView('court')">Court</button>
+    <button class="nav-tab" data-tab="efficiency" onclick="switchView('efficiency')">Skill Efficiency</button>
+    <button class="nav-tab" data-tab="summary" onclick="switchView('summary')">Statistics</button>
+  </div>
+</div>
+
+<!-- Tournament Context Banner -->
+<div id="tourney-banner" class="tourney-banner-hidden">
+  <span id="tourney-banner-text"></span>
+  <button id="tourney-back-btn" onclick="backToTournament()">Back to Tournament</button>
+</div>
+
+<!-- ===================== TOURNAMENT CONFIG VIEW ===================== -->
+<div id="view-config" class="view">
+  <div style="max-width:900px;margin:0 auto">
+    <div class="setup-header">
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Admin</div>
+        <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Tournament Configuration</div>
+      </div>
+    </div>
+
+    <!-- Tournament Basics -->
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-title">Tournament Details</div>
+      <div class="field-row">
+        <label>Tournament Name</label>
+        <input id="tc-name" placeholder="e.g. Summer League 2026" style="width:100%"/>
+      </div>
+      <div class="match-rules-grid">
+        <div class="field-row">
+          <label>Format</label>
+          <select id="tc-format" style="width:100%">
+            <option value="single-elimination">Single Elimination</option>
+            <option value="double-elimination">Double Elimination</option>
+            <option value="round-robin">Round Robin</option>
+            <option value="swiss">Swiss System</option>
+          </select>
+        </div>
+        <div class="field-row" id="tc-semi-mode-row">
+          <label>Semis Seeding <span style="font-size:8px;color:var(--text-muted);font-weight:normal">(Round Robin/Swiss)</span></label>
+          <select id="tc-semi-mode" style="width:100%">
+            <option value="1v4-2v3">Rank 1 vs 4, Rank 2 vs 3</option>
+            <option value="1v3-2v4">Rank 1 vs 3, Rank 2 vs 4</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Teams Configuration -->
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-title">Teams <span id="tc-team-count" style="font-size:11px;color:var(--text-muted);font-weight:normal">(0 teams)</span></div>
+      <div id="tc-teams-list" style="margin-bottom:12px">
+        <div style="color:var(--text-muted);font-size:12px">No teams added yet. Use the form below to add teams.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+        <div style="flex:1;min-width:160px">
+          <label style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px">Team Name</label>
+          <input id="tc-new-team-name" placeholder="Team name" style="width:100%"/>
+        </div>
+        <div style="width:80px">
+          <label style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px">Color</label>
+          <input type="color" id="tc-new-team-color" value="#00c2fd" style="width:100%;height:34px;border:1px solid var(--border);background:var(--bg-dark);cursor:pointer;padding:2px 4px;"/>
+        </div>
+        <button class="resource-btn btn-success" onclick="tcAddTeam()">+ Add Team</button>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+      <button class="resource-btn btn-success" onclick="tcSaveTournament()">💾 Save Tournament</button>
+      <button class="resource-btn btn-neutral" onclick="tcExportTournament()">⬇ Export JSON</button>
+      <button class="resource-btn btn-neutral" onclick="tcImportTournament()">⬆ Load JSON</button>
+      <input type="file" id="tc-import-file" accept=".json" style="display:none" onchange="tcImportTournamentFile(event)"/>
+      <button class="resource-btn btn-a" style="margin-left:auto" onclick="tcStartTournament()">▶ Start Tournament</button>
+    </div>
+
+    <div style="margin-top:24px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="resource-btn btn-danger" onclick="tcResetTournament()">🗑 Reset Tournament</button>
+    </div>
+
+    <!-- Status -->
+    <div id="tc-status" style="font-size:12px;color:var(--text-muted)"></div>
+  </div>
+</div>
+
+<!-- ===================== TOURNAMENT TEAMS VIEW ===================== -->
+<div id="view-tteams" class="view">
+  <div style="max-width:1080px;margin:0 auto">
+    <div class="setup-header">
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Admin</div>
+        <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Tournament Teams — Player Management</div>
+      </div>
+    </div>
+    <div id="tteams-no-tourney" style="color:var(--text-muted);padding:24px;text-align:center">Load or create a tournament first in Tournament Config.</div>
+    <div id="tteams-content" style="display:none">
+      <div class="teams-layout">
+        <div class="teams-list-panel">
+          <div class="panel-title">Teams</div>
+          <div id="tteams-list-items"></div>
+        </div>
+        <div class="team-editor-panel" id="tteams-editor-panel">
+          <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:24px 0">Select a team on the left to manage players.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SCHEDULE VIEW ===================== -->
+<div id="view-schedule" class="view">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="setup-header">
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Admin</div>
+        <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Tournament Schedule</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="resource-btn btn-success" onclick="schedGenerate()">🔄 Generate Schedule</button>
+        <button class="resource-btn btn-neutral" onclick="schedToggleView()" id="sched-toggle-btn">🔀 Bracket View</button>
+      </div>
+    </div>
+    <div id="sched-no-tourney" style="color:var(--text-muted);padding:24px;text-align:center">Load or create a tournament first. Start the tournament to generate a schedule.</div>
+    <div id="sched-content" style="display:none">
+      <div id="sched-bracket-view" style="display:none"></div>
+      <div id="sched-card-view"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== STANDINGS VIEW ===================== -->
+<div id="view-standings" class="view">
+  <div style="max-width:1000px;margin:0 auto">
+    <div class="setup-header">
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Admin</div>
+        <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Tournament Standings</div>
+      </div>
+    </div>
+    <div id="standings-no-tourney" style="color:var(--text-muted);padding:24px;text-align:center">Load or create a tournament first.</div>
+    <div id="standings-content" style="display:none">
+      <div class="panel">
+        <table class="standings-table" id="standings-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Team</th>
+              <th>W</th>
+              <th>L</th>
+              <th>Pts</th>
+              <th>SW</th>
+              <th>SL</th>
+              <th>Set Ratio</th>
+              <th>PW</th>
+              <th>PL</th>
+              <th>Pt Ratio</th>
+            </tr>
+          </thead>
+          <tbody id="standings-body"></tbody>
+        </table>
+      </div>
+      <div id="standings-last-updated" style="font-size:10px;color:var(--text-muted);margin-top:8px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TOURNAMENT STATS VIEW ===================== -->
+<div id="view-tstats" class="view">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="setup-header">
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Admin</div>
+        <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Tournament Statistics</div>
+      </div>
+      <button class="resource-btn btn-success" onclick="tstatsExport()">⬇ Export Full Tournament</button>
+    </div>
+    <div id="tstats-no-tourney" style="color:var(--text-muted);padding:24px;text-align:center">Load or create a tournament first.</div>
+    <div id="tstats-content" style="display:none">
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-title">Tournament Overview</div>
+        <div id="tstats-overview"></div>
+      </div>
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-title">Leaderboard (All Matches)</div>
+        <div id="tstats-leaderboard"></div>
+      </div>
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-title">Player Skill Stats (All Matches)</div>
+        <div id="tstats-skill-stats"></div>
+      </div>
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-title">Efficiency Statistics (All Matches)</div>
+        <div id="tstats-efficiency"></div>
+      </div>
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-title">Set History (All Matches)</div>
+        <div id="tstats-set-history"></div>
+      </div>
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-title">Substitution Log (All Matches)</div>
+        <div id="tstats-substitution-log"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -72,32 +302,24 @@
     <div class="setup-grid">
       <!-- TEAM A -->
       <div class="setup-panel">
-        <h3 class="team-a-h">Team A</h3>
-        <div class="field-row">
-          <label>Load Saved Team</label>
-          <select id="teamA-saved-select" onchange="loadSavedTeamIntoSetup('A', this.value)" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:6px 8px;font-family:var(--font-main);font-size:13px">
-            <option value="">— Manual Entry —</option>
-          </select>
+        <div class="setup-team-head">
+          <h3 class="team-a-h" id="setup-title-a">Team A</h3>
+          <span class="setup-color-dot" id="setup-dot-a"></span>
         </div>
         <div class="field-row"><label>Team Name</label><input id="teamA-name" value="Team A" placeholder="Team name"/></div>
         <div class="field-row"><label>Libero Jersey #</label><input id="teamA-libero" type="number" value="0" placeholder="0 = none"/></div>
-        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:10px;margin-bottom:4px">Starting Lineup — Pos 1–6</div>
-        <div style="font-size:9px;color:var(--text-muted);margin-bottom:6px">Tap a cell: pick from roster or type manually</div>
+        <div class="setup-lineup-label">Starting Lineup — Pos 1–6</div>
         <div class="players-setup" id="teamA-players"></div>
       </div>
       <!-- TEAM B -->
       <div class="setup-panel">
-        <h3 class="team-b-h">Team B</h3>
-        <div class="field-row">
-          <label>Load Saved Team</label>
-          <select id="teamB-saved-select" onchange="loadSavedTeamIntoSetup('B', this.value)" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:6px 8px;font-family:var(--font-main);font-size:13px">
-            <option value="">— Manual Entry —</option>
-          </select>
+        <div class="setup-team-head">
+          <h3 class="team-b-h" id="setup-title-b">Team B</h3>
+          <span class="setup-color-dot" id="setup-dot-b"></span>
         </div>
         <div class="field-row"><label>Team Name</label><input id="teamB-name" value="Team B" placeholder="Team name"/></div>
         <div class="field-row"><label>Libero Jersey #</label><input id="teamB-libero" type="number" value="0" placeholder="0 = none"/></div>
-        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:10px;margin-bottom:4px">Starting Lineup — Pos 1–6</div>
-        <div style="font-size:9px;color:var(--text-muted);margin-bottom:6px">Tap a cell: pick from roster or type manually</div>
+        <div class="setup-lineup-label">Starting Lineup — Pos 1–6</div>
         <div class="players-setup" id="teamB-players"></div>
       </div>
     </div>
@@ -488,6 +710,14 @@
       <div class="panel-title">Set Efficiency</div>
       <div id="set-efficiency-table"></div>
     </div>
+    <div class="panel">
+      <div class="panel-title">Block Efficiency</div>
+      <div id="block-efficiency-table"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Dig Efficiency</div>
+      <div id="dig-efficiency-table"></div>
+    </div>
 
   </div>
 </div>
@@ -577,6 +807,8 @@
   </div>
 </div>
 
+<script src="sync.js"></script>
+<script src="tournament.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
