@@ -25,15 +25,14 @@ There are no tests, no linting, and no build pipeline. All code is vanilla JS + 
 | `style.css` | All styling (~49K) — CSS custom properties for theming, dark-mode volleyball aesthetic |
 | `app.js` | Main application logic (~3770 lines) — match state, scoring, substitutions, rendering, tournament UI |
 | `tournament.js` | Tournament engine (~1219 lines) — schedule generation, bracket logic, standings, Swiss pairing |
-| `server.js` | Node.js server (~800+ lines) — HTTP static file server, WebSocket sync, tournament CRUD, schedule generation, bracket logic, standings, Swiss pairing. Single source of truth; persists to `aquila-session.json`. |
-| `db.js` | **Removed** — was IndexedDB persistence layer. All tournament data now managed by `server.js`. |
+| `db.js` | IndexedDB persistence layer (~328 lines) — all CRUD operations for tournaments, matches, teams, players, standings |
 
 ### Data Flow
 
 1. **In-memory state** (`state` object in `app.js`) drives the UI. Every user action mutates `state`, then calls `renderAll()` or a targeted render function.
-2. **Auto-save** persists `state` to `localStorage` under key `volleyref-match-state` (match-level only, for offline recovery).
-3. **Tournament data** lives on the **server** (`server.js`) and is persisted to `aquila-session.json`. The active tournament is held in memory (`activeTournament` in `tournament.js`) and synced across all devices via WebSocket.
-4. On page load, the server sends `FULL_STATE` via WebSocket to every connecting device, which restores the tournament context, live match, and current match.
+2. **Auto-save** persists `state` to `localStorage` under key `volleyref-match-state` (match-level only).
+3. **Tournament data** lives in IndexedDB via `db.js`. The active tournament is held in memory (`activeTournament` in `tournament.js`) and mirrored to `localStorage` under `volleyref-active-tournament`.
+4. On page load, `loadState()` restores a match from localStorage, and `db.init()` + `restoreTournamentLocal()` restores tournament context.
 
 ### Two-Menu Architecture
 
@@ -71,26 +70,17 @@ Supports four formats:
 - **Round Robin** — circle method, with configurable semi-final seeding (`1v4-2v3` or `1v3-2v4`) and finals
 - **Swiss** — configurable rounds, backtracking pairing algorithm to avoid rematches, bye handling
 
-Key functions (all run on the server):
+Key functions:
 - `generateSchedule(tournament)` — dispatches to format-specific generator
-- `startTournament(id)` — generates schedule, initializes standings
-- `completeServerTournamentMatch(payload)` — records result, advances winner, recalculates standings
-- `recalculateServerStandings(tournament)` — rebuilds standings from all completed matches
-- `syncEliminationBrackets(tournament, format)` — pushes winner through bracket (single/double elim)
-- `generateSwissPairings(tournament, round)` — backtracking pairing with rematch avoidance
+- `startTournament(id)` — generates schedule, saves all match slots, initializes standings
+- `completeTournamentMatch(id, matchId, result)` — records result, recalculates standings, syncs round-robin playoffs
+- `recalculateStandings(id)` — rebuilds standings from all completed matches
+- `advanceTournamentWinner(tournamentId, matchId)` — pushes winner to next bracket match (single/double elim)
+- `generateSwissPairings(tournamentId, round)` — backtracking pairing with rematch avoidance
 
-### Server Layer (`server.js`)
+### Database Layer (`db.js`)
 
-The Node.js server is the **single source of truth** for all tournament data. It handles:
-- **HTTP serving** — serves static files (index.html, app.js, style.css, etc.) on port 3000
-- **WebSocket sync** — real-time broadcast of state changes to all connected devices on port 3001
-- **Tournament CRUD** — create, add/remove teams, add/remove players, start, reset
-- **Schedule generation** — round-robin, single/double elimination, Swiss
-- **Match completion** — records result, advances winner in bracket, recalculates standings
-- **Swiss pairing** — backtracking algorithm with rematch avoidance
-- **Persistence** — full state saved to `aquila-session.json` on every change + auto-save every 10s
-
-Clients send WebSocket messages (e.g. `TOURNAMENT_CREATE`, `TOURNAMENT_ADD_TEAM`, `MATCH_ENDED`) and the server broadcasts the updated state to all devices.
+IndexedDB with 5 object stores: `tournaments`, `matches`, `teams`, `players`, `playerMatchStats`, `standings`. The `db` object exposes a clean async API. The comment at the top of `db.js` notes this layer is designed to be swappable for a PostgreSQL/fetch() backend — function signatures should stay the same.
 
 ### Key Constraints & Rules Enforced
 
