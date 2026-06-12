@@ -1013,7 +1013,7 @@ wss.on('connection', function(ws, req) {
       };
       const outgoing = JSON.stringify({ type: msg.type, payload: outgoingPayload, fullState: broadcastPayload });
       connectedClients.forEach(function(client) {
-        if (client !== ws && client.readyState === WebSocket.OPEN) {
+        if (client.readyState === WebSocket.OPEN) {
           client.send(outgoing);
         }
       });
@@ -1021,7 +1021,7 @@ wss.on('connection', function(ws, req) {
       // For match-level updates, just forward the original message
       const outgoing = JSON.stringify({ type: msg.type, payload: outgoingPayload });
       connectedClients.forEach(function(client) {
-        if (client !== ws && client.readyState === WebSocket.OPEN) {
+        if (client.readyState === WebSocket.OPEN) {
           client.send(outgoing);
         }
       });
