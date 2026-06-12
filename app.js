@@ -4,18 +4,26 @@ const SAVE_VERSION = 1;
 let currentTournamentMatch = null; // { tournamentId, matchId, matchNumber }
 
 function saveState() {
-  try {
-    const payload = {
-      version: SAVE_VERSION,
-      savedAt: new Date().toISOString(),
-      state: state,
-      liberoSelectionMode: liberoSelectionMode,
-      selectedEfficiencySkill: selectedEfficiencySkill,
-      subRegistry: subRegistry,
-      currentTournamentMatch: currentTournamentMatch,
-    };
-    localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
-  } catch (e) { /* quota exceeded or private browsing — silently ignore */ }
+  const serverBacked = typeof sync !== 'undefined' && sync.shouldConnect && sync.shouldConnect();
+  if (!serverBacked) {
+    try {
+      const payload = {
+        version: SAVE_VERSION,
+        savedAt: new Date().toISOString(),
+        state: state,
+        liberoSelectionMode: liberoSelectionMode,
+        selectedEfficiencySkill: selectedEfficiencySkill,
+        subRegistry: subRegistry,
+        currentTournamentMatch: currentTournamentMatch,
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+    } catch (e) { /* quota exceeded or private browsing — silently ignore */ }
+  }
+
+  // Push live match state to the server so every device reads the same source of truth.
+  if (serverBacked && sync.isConnected()) {
+    sync.pushMatchState(state);
+  }
 }
 
 function loadState() {
@@ -81,6 +89,11 @@ let state = {
   skillEfficiencyLog: [],
   playerPoints: {}, // "A:12" -> scored points
   playerStats: {}, // "A:12" -> kills/aces/blocks/errors
+  courtScoreA: 0,
+  courtScoreB: 0,
+  courtSet: 1,
+  courtPlayerStats: {},
+  courtActionLog: [],
   maxSubs: 6,
   setsToWin: 3,
   ptsPerSet: 25,
@@ -542,6 +555,11 @@ function startGame() {
   state.skillEfficiencyLog = [];
   state.playerPoints = {};
   state.playerStats = {};
+  state.courtScoreA = 0;
+  state.courtScoreB = 0;
+  state.courtSet = 1;
+  state.courtPlayerStats = {};
+  state.courtActionLog = [];
   state.serving = state.firstServer;
   state.currentSet = 1;
   state.matchEnded = false;
@@ -553,6 +571,10 @@ function startGame() {
   renderAll();
   showAlert('Match started! ' + state.teamA.name + ' vs ' + state.teamB.name, 'success');
   saveState();
+
+  if (typeof sync !== 'undefined' && sync.shouldConnect() && sync.isConnected()) {
+    sync.pushMatchStarted(state, getActiveTournament(), currentTournamentMatch);
+  }
 }
 
 // ===================== GAME LOGIC =====================
@@ -675,8 +697,19 @@ function checkSetWin() {
   const aWin = state.scoreA >= pts && state.scoreA - state.scoreB >= minLead;
   const bWin = state.scoreB >= pts && state.scoreB - state.scoreA >= minLead;
   if (aWin || bWin) {
+
+    if (typeof sync !== 'undefined' &&
+        sync.shouldConnect() &&
+        sync.isConnected()) {
+      sync.pushMatchState(state);
+    }
+
     const winner = aWin ? 'A' : 'B';
-    state.setHistory.push({ set: state.currentSet, a: state.scoreA, b: state.scoreB, winner });
+    state.setHistory.push({ 
+      set: state.currentSet, 
+      a: state.scoreA, 
+      b: state.scoreB, 
+      winner });
     if (aWin) state.teamA.setsWon++; else state.teamB.setsWon++;
     showModal('Set ' + state.currentSet + ' Complete!',
       (aWin ? state.teamA.name : state.teamB.name) + ' wins the set ' + state.scoreA + '-' + state.scoreB + '.',
@@ -706,42 +739,49 @@ async function endMatch() {
   }
   state.matchEnded = true;
   state.gameStarted = false;
+
   if (!state.summaryExported) {
     if (!currentTournamentMatch) {
-      exportMatchSummary();
       reserveNextMatchNumber();
     }
     state.summaryExported = true;
   }
 
-  // ── Tournament Match Completion ─────────────────────────────
-  let tournamentResultSaved = false;
+  // ── Tournament Match Completion ──────────────────────────────
+  let isTournamentMatch = false;
+  let tournament = null;
+  let matchResult = null;
+  let finishedMatchCtx = null;
+
   if (currentTournamentMatch) {
-    const winnerCode = getWinnerTeamCode();
-    const setsA = state.teamA.setsWon;
-    const setsB = state.teamB.setsWon;
-
-    // Build set scores from set history
-    const setScores = state.setHistory.map(function(s) { return { a: s.a, b: s.b }; });
-
-    const matchResult = {
-      score: { setsA, setsB, setScores },
-      matchData: buildMatchSummary()
-    };
-
-    // Resolve the winner by matching team NAMES (not A/B slots).
-    // The game's state.teamA might not correspond to the tournament's teamA
-    // (e.g. after "Change Court" or manual lineup changes).
-    const tournament = getActiveTournament();
+    tournament = getActiveTournament();
     if (tournament) {
-      const match = tournament.schedule.find(function(m) { return m.id === currentTournamentMatch.matchId; });
-      if (match && winnerCode) {
-        const gameWinnerName = winnerCode === 'A' ? state.teamA.name : state.teamB.name;
-        const gameLoserName = winnerCode === 'A' ? state.teamB.name : state.teamA.name;
+      const winnerCode = getWinnerTeamCode();
+      const match = tournament.schedule.find(function(m) {
+        return m.id === currentTournamentMatch.matchId;
+      });
 
-        // Match game team names to tournament team names to get correct IDs
-        const tournTeamA = tournament.teams.find(function(tm) { return tm.id === match.teamAId; });
-        const tournTeamB = tournament.teams.find(function(tm) { return tm.id === match.teamBId; });
+      if (match && winnerCode) {
+        const setsA = state.teamA.setsWon;
+        const setsB = state.teamB.setsWon;
+        const setScores = state.setHistory.map(function(s) {
+          return { a: s.a, b: s.b };
+        });
+
+        matchResult = {
+          score: { setsA, setsB, setScores },
+          matchData: buildMatchSummary()
+        };
+
+        const gameWinnerName = winnerCode === 'A'
+          ? state.teamA.name : state.teamB.name;
+
+        const tournTeamA = tournament.teams.find(function(tm) {
+          return tm.id === match.teamAId;
+        });
+        const tournTeamB = tournament.teams.find(function(tm) {
+          return tm.id === match.teamBId;
+        });
         const tournNameA = tournTeamA ? tournTeamA.name : match.teamAName;
         const tournNameB = tournTeamB ? tournTeamB.name : match.teamBName;
 
@@ -751,41 +791,61 @@ async function endMatch() {
         } else if (gameWinnerName === tournNameB) {
           winnerTeamId = match.teamBId;
         }
-        // Fallback: if names don't match (user renamed in setup), use slot-based mapping
         if (!winnerTeamId) {
           winnerTeamId = winnerCode === 'A' ? match.teamAId : match.teamBId;
         }
 
         matchResult.winnerId = winnerTeamId;
+        isTournamentMatch = true;
+        finishedMatchCtx = currentTournamentMatch;
 
-        await completeTournamentMatch(currentTournamentMatch.tournamentId, currentTournamentMatch.matchId, matchResult);
-
-        // Auto-advance winner in bracket
-        await advanceTournamentWinner(currentTournamentMatch.tournamentId, currentTournamentMatch.matchId);
-
-        // Mark match as in-schedule on the banner
         const bannerText = document.getElementById('tourney-banner-text');
-        tournamentResultSaved = true;
-        bannerText.textContent = '✅ Match ' + currentTournamentMatch.matchNumber + ' completed — ' + gameWinnerName + ' wins ' + setsA + '-' + setsB;
+        if (bannerText) {
+          bannerText.textContent = '✅ Match ' +
+            currentTournamentMatch.matchNumber +
+            ' completed — ' + gameWinnerName +
+            ' wins ' + setsA + '-' + setsB;
+        }
       }
     }
   }
 
   closeModal();
-  if (tournamentResultSaved) {
-    document.getElementById('tourney-banner').classList.add('tourney-banner-hidden');
+
+  if (isTournamentMatch && matchResult && finishedMatchCtx) {
+    document.getElementById('tourney-banner')
+      .classList.add('tourney-banner-hidden');
+
     currentTournamentMatch = null;
-    switchMenu('admin');
-    switchView('schedule');
-    showAlert('Match result saved to tournament. Winner advanced.', 'success');
+
+    // Send result to server — server handles bracket advance + standings
+    // and broadcasts the updated tournament to all devices.
+    if (typeof sync !== 'undefined' &&
+        sync.shouldConnect() &&
+        sync.isConnected()) {
+      sync.pushMatchEnded(tournament, state, finishedMatchCtx, matchResult);
+    }
+
+    clearSavedState();
+    undoStack = [];
+
+    setTimeout(function() {
+      switchMenu('admin');
+      switchView('schedule');
+      showAlert(
+        'Match result saved to tournament. Winner advanced.',
+        'success'
+      );
+    }, 300);
+
   } else {
+    // Non-tournament match — just show summary
+    clearSavedState();
+    undoStack = [];
     switchView('summary');
     updateSummary();
-    showAlert('Match summary exported to JSON.', 'success');
+    showAlert('Match complete.', 'success');
   }
-
-  clearSavedState();
-  undoStack = [];
 }
 
 // ===================== ROTATION =====================
@@ -1367,36 +1427,56 @@ function getOpponentTeam(team) {
 
 function recordCourtAction(actionType) {
   if (!state.lastTouchPlayer || !state.lastTouchTeam) return;
-  pushUndoSnapshot();
   const action = COURT_ACTIONS[actionType];
   if (!action) return;
   const playerTeam = state.lastTouchTeam;
   const pointTeam = action.pointTo === 'opponent' ? getOpponentTeam(playerTeam) : playerTeam;
   const player = normalizeJerseyValue(state.lastTouchPlayer);
-  const scorerInfo = action.pointTo === 'selected' ? { team: playerTeam, jersey: player } : null;
-  addPoint(pointTeam, {
-    scorerInfo,
-    statEvents: [{ team: playerTeam, jersey: player, stat: action.stat }],
+  state.courtScoreA = state.courtScoreA || 0;
+  state.courtScoreB = state.courtScoreB || 0;
+  state.courtSet = state.courtSet || state.currentSet || 1;
+  state.courtPlayerStats = state.courtPlayerStats || {};
+  state.courtActionLog = state.courtActionLog || [];
+
+  if (pointTeam === 'A') state.courtScoreA++;
+  else state.courtScoreB++;
+
+  const key = getPlayerKey(playerTeam, player);
+  if (!state.courtPlayerStats[key]) {
+    state.courtPlayerStats[key] = { kills: 0, aces: 0, blocks: 0, attackErrors: 0, serveErrors: 0, faults: 0 };
+  }
+  state.courtPlayerStats[key][action.stat] = (state.courtPlayerStats[key][action.stat] || 0) + 1;
+  state.courtActionLog.push({
+    set: state.courtSet,
+    scoreA: state.courtScoreA,
+    scoreB: state.courtScoreB,
+    pointTeam,
+    playerTeam,
+    player,
     actionType,
     actionLabel: action.label,
-    responsiblePlayer: { team: playerTeam, jersey: player }
+    timestamp: new Date().toISOString()
   });
   clearTouch();
   updateCourtScores();
   renderPlayerStats();
+  saveState();
 }
 
 function updateCourtScores() {
-  document.getElementById('court-scoreA').textContent = state.scoreA;
-  document.getElementById('court-scoreB').textContent = state.scoreB;
-  document.getElementById('court-set').textContent = state.currentSet;
+  state.courtScoreA = state.courtScoreA || 0;
+  state.courtScoreB = state.courtScoreB || 0;
+  state.courtSet = state.courtSet || 1;
+  document.getElementById('court-scoreA').textContent = state.courtScoreA;
+  document.getElementById('court-scoreB').textContent = state.courtScoreB;
+  document.getElementById('court-set').textContent = state.courtSet;
   document.getElementById('court-nameA').textContent = state.teamA.name;
   document.getElementById('court-nameB').textContent = state.teamB.name;
 }
 
 function renderPlayerStats() {
   const el = document.getElementById('player-stats');
-  const entries = Object.entries(state.playerStats || {})
+  const entries = Object.entries(state.courtPlayerStats || {})
     .filter(([, stats]) => (stats.kills || 0) + (stats.aces || 0) + (stats.blocks || 0) + (stats.attackErrors || 0) + (stats.serveErrors || 0) + (stats.faults || 0) > 0)
     .sort((a,b) => {
       const aScore = (a[1].kills || 0) + (a[1].aces || 0) + (a[1].blocks || 0);
@@ -2049,6 +2129,7 @@ function resetAll() {
          scoreA: 0, scoreB: 0, currentSet: 1, matchNumber: getNextMatchNumber(), serving: state.firstServer,
          firstServer: state.firstServer,
          setHistory: [], allSubsLog: [], pointLog: [], skillEfficiencyLog: [], playerPoints: {}, playerStats: {},
+         courtScoreA: 0, courtScoreB: 0, courtSet: 1, courtPlayerStats: {}, courtActionLog: [],
          maxSubs: state.maxSubs, setsToWin: state.setsToWin, ptsPerSet: getPointsTargetForSet(1),
          gameStarted: true, matchEnded: false, summaryExported: false,
          currentSubTeam: null, lastTouchPlayer: null, lastTouchTeam: null,
@@ -2061,6 +2142,9 @@ function resetAll() {
        renderAll();
        showAlert('Match reset!', 'warn');
        clearSavedState();
+        if (typeof sync !== 'undefined' && sync.shouldConnect() && sync.isConnected()) {
+         sync.pushStateReset(state);
+       }
      }}
   ]);
 }
@@ -2233,10 +2317,9 @@ var switchView = function(name) {
 
 // ===================== INIT =====================
 initSetupUI();
-const dbReady = db.init(); // Initialize IndexedDB
 
-// Attempt to restore a saved match
-if (loadState() && state.gameStarted && !state.matchEnded) {
+// Attempt to restore a saved match only when opened as a local/offline file.
+if ((!sync.shouldConnect || !sync.shouldConnect()) && loadState() && state.gameStarted && !state.matchEnded) {
   switchView('game');
   renderAll();
   try {
@@ -2247,24 +2330,9 @@ if (loadState() && state.gameStarted && !state.matchEnded) {
   } catch(e) { /* ignore */ }
 }
 
-dbReady.then(async function() {
-  if (!getActiveTournament()) {
-    const localTournament = restoreTournamentLocal();
-    if (localTournament && localTournament.id) {
-      const storedTournament = await db.getTournament(localTournament.id);
-      setActiveTournament(storedTournament || localTournament);
-    }
-  }
-  if (!currentTournamentMatch) return;
-  const tournament = await db.getTournament(currentTournamentMatch.tournamentId);
-  if (!tournament) return;
-  setActiveTournament(tournament);
-  const match = (tournament.schedule || []).find(function(m) { return m.id === currentTournamentMatch.matchId; });
-  if (!match) return;
-  const banner = document.getElementById('tourney-banner');
-  banner.classList.remove('tourney-banner-hidden');
-  document.getElementById('tourney-banner-text').textContent = tournament.name + ' - Match ' + match.matchNumber + ': ' + (match.teamAName || 'TBD') + ' vs ' + (match.teamBName || 'TBD');
-}).catch(function() { /* ignore restore failures */ });
+// Tournament state is restored from the server via FULL_STATE WebSocket message.
+// The server sends the full state (tournament + live match + current match context)
+// to every device on connect, so no local DB restore is needed.
 
 ['tc-name', 'tc-format', 'tc-semi-mode'].forEach(function(id) {
   const el = document.getElementById(id);
@@ -2291,7 +2359,6 @@ async function tcAutoSaveConfigChange() {
     t.roundRobinSemiMode = semiEl.value || '1v4-2v3';
   }
   setActiveTournament(t);
-  await autoSaveTournament();
   const statusEl = document.getElementById('tc-status');
   if (statusEl) statusEl.textContent = 'Status: ' + t.status + ' | Last saved: ' + new Date(t.lastSavedAt || Date.now()).toLocaleString();
 }
@@ -2386,7 +2453,6 @@ async function tcSaveTournament() {
   } else {
     tournament.name = name;
     tournament.format = format;
-    await db.saveTournament(tournament);
     setActiveTournament(tournament);
   }
 
@@ -2409,6 +2475,9 @@ async function tcImportTournamentFile(event) {
   if (!file) return;
   try {
     const tournament = await loadTournamentFromFile(file);
+    if (tournament) {
+      setActiveTournament(tournament);
+    }
     tcRender();
     showAlert('Tournament "' + tournament.name + '" loaded. Status: ' + tournament.status, 'success');
   } catch (e) {
@@ -2429,13 +2498,10 @@ async function tcStartTournament() {
         closeModal();
         const tcSemiEl = document.getElementById('tc-semi-mode');
         tournament.roundRobinSemiMode = tcSemiEl ? tcSemiEl.value : (tournament.roundRobinSemiMode || '1v4-2v3');
-        await db.saveTournament(tournament);
-        const started = await startTournament(tournament.id);
-        if (started) {
-          tcRender();
-          showAlert('Tournament started! ' + started.schedule.length + ' matches generated.', 'success');
-          switchView('schedule');
-        }
+        startTournament(tournament.id);
+        tcRender();
+        showAlert('Tournament start requested. Server will generate the schedule and broadcast updates.', 'success');
+        switchView('schedule');
       }}
     ]
   );
@@ -2453,9 +2519,10 @@ async function tcResetTournament() {
       { label: 'Reset Everything', cls: 'btn-danger', fn: async function() {
         closeModal();
         if (t) {
-          await db.deleteTournament(t.id);
+          resetTournament();
+        } else {
+          setActiveTournament(null);
         }
-        setActiveTournament(null);
         currentTournamentMatch = null;
         document.getElementById('tourney-banner').classList.add('tourney-banner-hidden');
         tcRender();
@@ -2553,7 +2620,6 @@ async function tteamsUpdatePlayer(teamId, idx, field, value) {
   else if (field === 'name') team.players[idx].name = value;
   else if (field === 'libero') team.players[idx].libero = value;
 
-  await db.saveTournament(t);
   setActiveTournament(t);
 }
 
@@ -2564,7 +2630,7 @@ async function tteamsRemovePlayer(teamId, idx) {
   if (!team || !team.players[idx]) return;
 
   const jersey = team.players[idx].jersey;
-  await removePlayerFromTeam(t.id, teamId, jersey);
+  removePlayerFromTeam(t.id, teamId, jersey);
   tteamsRender();
   tteamsRenderEditor(teamId);
 }
@@ -2624,9 +2690,6 @@ async function schedDrop(event, targetMatchId) {
   target.position = sourcePosition;
   target.matchNumber = sourceMatchNumber;
   t.schedule.sort(function(a, b) { return a.position - b.position; });
-  await db.saveTournament(t);
-  await db.saveMatch(source);
-  await db.saveMatch(target);
   setActiveTournament(t);
   schedRender();
 }
@@ -2709,7 +2772,7 @@ async function schedSetFinalsSeries(matchId, gamesToWin) {
 
   // Remove any previously generated finals game slots beyond game 1
   var toRemove = t.schedule.filter(function(m) { return m.finalsParentId === match.id; });
-  toRemove.forEach(function(rm) { db.deleteMatch(rm.id); });
+  // Server handles deletion of generated game slots
   t.schedule = t.schedule.filter(function(m) { return m.finalsParentId !== match.id; });
 
   // The base match becomes Game 1 of the series
@@ -2720,7 +2783,7 @@ async function schedSetFinalsSeries(matchId, gamesToWin) {
   match.winnerId = null;
   match.score = { setsA: 0, setsB: 0, setScores: [] };
   match.matchData = null;
-  await db.saveMatch(match);
+  // Server handles persistence
 
   if (gamesToWin > 1) {
     // Find the current highest round and matchNumber in the tournament
@@ -2752,11 +2815,11 @@ async function schedSetFinalsSeries(matchId, gamesToWin) {
         finalsGamesToWin: gamesToWin
       };
       t.schedule.push(gameMatch);
-      await db.saveMatch(gameMatch);
+      // Server handles persistence
     }
   }
 
-  await db.saveTournament(t);
+  // Tournament synced via setActiveTournament below
   setActiveTournament(t);
   schedRender();
 }
@@ -2773,7 +2836,7 @@ function schedMatchCardHtml(t, m) {
   const nameA = tbdA ? (m.teamAName && m.teamAName !== 'TBD' ? m.teamAName : 'TBD') : m.teamAName;
   const nameB = tbdB ? (m.teamBName && m.teamBName !== 'TBD' ? m.teamBName : 'TBD') : m.teamBName;
   const scoreDisplay = isDone ? '<span class="sched-card-score">' + m.score.setsA + ' - ' + m.score.setsB + '</span>' : '';
-  const liveBadge = isLive ? '<span style="color:var(--active-color);font-size:9px;margin-left:4px">â— LIVE</span>' : '';
+  const liveBadge = isLive ? '<span style="color:var(--active-color);font-size:9px;margin-left:4px">LIVE</span>' : '';
   const dragAttrs = t.format === 'round-robin' && (m.stage || 'round-robin') === 'round-robin' ? ' draggable="true" ondragstart="schedDragStart(event,\'' + m.id + '\')" ondragover="schedDragOver(event)" ondrop="schedDrop(event,\'' + m.id + '\')"' : '';
 
   // Finals series selector — only on the base final match (not generated game slots)
@@ -3071,10 +3134,10 @@ function schedGenerate() {
         if (t.format === 'round-robin' || t.format === 'swiss' || t.format === 'single-elimination' || t.format === 'double-elimination') {
           const semiModeEl = document.getElementById('tc-semi-mode');
           t.roundRobinSemiMode = semiModeEl ? semiModeEl.value : (t.roundRobinSemiMode || '1v4-2v3');
-          await db.saveTournament(t);
         }
-        const started = await startTournament(t.id);
-        if (started) { showAlert('Schedule generated! ' + started.schedule.length + ' matches.', 'success'); schedRender(); }
+        startTournament(t.id);
+        showAlert('Schedule generation requested. Server will broadcast the updated tournament.', 'success');
+        schedRender();
       }}
     ]
   );
@@ -3095,11 +3158,6 @@ function schedEditMatch(matchId) {
   const match = t.schedule.find(function(m) { return m.id === matchId; });
   if (!match) return;
 
-  if (match.status === 'completed') {
-    showAlert('Cannot edit a completed match. The result is already recorded.', 'warn');
-    return;
-  }
-
   var teamOptions = '<option value="">-- Select Team --</option>';
   t.teams.forEach(function(team) {
     teamOptions += '<option value="' + team.id + '">' + escHtml(team.name) + '</option>';
@@ -3119,6 +3177,19 @@ function schedEditMatch(matchId) {
   body += '<select id="edit-status" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:8px;font-size:13px">';
   body += '<option value="scheduled"' + (match.status === 'scheduled' ? ' selected' : '') + '>Scheduled</option>';
   body += '<option value="in-progress"' + (match.status === 'in-progress' ? ' selected' : '') + '>In Progress</option>';
+  body += '<option value="completed"' + (match.status === 'completed' ? ' selected' : '') + '>Completed</option>';
+  body += '</select></div>';
+  body += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  body += '<div><label style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px">Sets A</label>';
+  body += '<input id="edit-setsA" type="number" min="0" max="5" value="' + ((match.score && match.score.setsA) || 0) + '" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:8px;font-size:13px"></div>';
+  body += '<div><label style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px">Sets B</label>';
+  body += '<input id="edit-setsB" type="number" min="0" max="5" value="' + ((match.score && match.score.setsB) || 0) + '" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:8px;font-size:13px"></div>';
+  body += '</div>';
+  body += '<div><label style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px">Winner</label>';
+  body += '<select id="edit-winner" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-primary);padding:8px;font-size:13px">';
+  body += '<option value="">-- Select Winner for Completed --</option>';
+  body += '<option value="A"' + (match.winnerId && match.winnerId === match.teamAId ? ' selected' : '') + '>Team A</option>';
+  body += '<option value="B"' + (match.winnerId && match.winnerId === match.teamBId ? ' selected' : '') + '>Team B</option>';
   body += '</select></div>';
   body += '</div>';
 
@@ -3129,9 +3200,27 @@ function schedEditMatch(matchId) {
       var teamAId = document.getElementById('edit-teamA').value;
       var teamBId = document.getElementById('edit-teamB').value;
       var newStatus = document.getElementById('edit-status').value;
+      var setsA = parseInt(document.getElementById('edit-setsA').value, 10) || 0;
+      var setsB = parseInt(document.getElementById('edit-setsB').value, 10) || 0;
+      var winnerSide = document.getElementById('edit-winner').value;
 
       var teamA = t.teams.find(function(tm) { return tm.id === teamAId; });
       var teamB = t.teams.find(function(tm) { return tm.id === teamBId; });
+
+      if (newStatus === 'completed') {
+        if (!teamA || !teamB) {
+          showAlert('Completed matches need both teams assigned.', 'warn');
+          return;
+        }
+        if (winnerSide !== 'A' && winnerSide !== 'B') {
+          showAlert('Select a winner before marking the match completed.', 'warn');
+          return;
+        }
+        if (setsA === setsB) {
+          if (winnerSide === 'A') setsA = Math.max(setsA, setsB + 1);
+          else setsB = Math.max(setsB, setsA + 1);
+        }
+      }
 
       var oldWinnerId = match.winnerId;
       var oldTeamAId = match.teamAId;
@@ -3142,6 +3231,11 @@ function schedEditMatch(matchId) {
       match.teamAName = teamA ? teamA.name : 'TBD';
       match.teamBName = teamB ? teamB.name : 'TBD';
       match.status = newStatus;
+      if (newStatus !== 'completed') {
+        match.winnerId = null;
+        match.score = { setsA: 0, setsB: 0, setScores: [] };
+        match.matchData = null;
+      }
 
       // Sync bracket: if teams changed and this match feeds into other matches, update downstream references
       if ((oldTeamAId !== match.teamAId || oldTeamBId !== match.teamBId) && t.schedule) {
@@ -3183,9 +3277,33 @@ function schedEditMatch(matchId) {
         });
       }
 
-      await db.saveTournament(t);
-      await db.saveMatch(match);
-      setActiveTournament(t);
+      if (newStatus === 'completed') {
+        var winnerId = winnerSide === 'A' ? match.teamAId : match.teamBId;
+        var matchResult = {
+          winnerId: winnerId,
+          score: { setsA: setsA, setsB: setsB, setScores: [] },
+          matchData: {
+            winner: winnerSide === 'A' ? match.teamAName : match.teamBName,
+            teams: {
+              A: { name: match.teamAName, setsWon: setsA, totalPoints: 0 },
+              B: { name: match.teamBName, setsWon: setsB, totalPoints: 0 }
+            },
+            setHistory: [],
+            completedManually: true,
+            completedAt: new Date().toISOString()
+          }
+        };
+        match.winnerId = winnerId;
+        match.score = matchResult.score;
+        match.matchData = matchResult.matchData;
+        match.status = 'completed';
+        setActiveTournament(t);
+        if (typeof sync !== 'undefined' && sync.shouldConnect() && sync.isConnected()) {
+          sync.sendTournamentMatchComplete(t.id, match.id, matchResult);
+        }
+      } else {
+        setActiveTournament(t);
+      }
       schedRender();
       showAlert('Match ' + match.matchNumber + ' updated.', 'success');
     }}
@@ -3373,8 +3491,6 @@ async function _startTournamentMatch(matchId) {
   const teamB = t.teams.find(function(tm) { return tm.id === match.teamBId; });
   if (!teamA || !teamB) { showAlert('Both teams must be assigned.', 'warn'); return; }
   match.status = 'in-progress';
-  await db.saveTournament(t);
-  await db.saveMatch(match);
   setActiveTournament(t);
 
   document.getElementById('teamA-name').value = teamA.name;
@@ -3435,164 +3551,10 @@ function backToTournament() {
 }
 
 // ── Advance Winner in Bracket ───────────────────────────────
-async function advanceTournamentWinner(tournamentId, matchId) {
-  const tournament = await db.getTournament(tournamentId);
-  if (!tournament) return;
-
-  const match = tournament.schedule.find(function(m) { return m.id === matchId; });
-  if (!match || match.status !== 'completed' || !match.winnerId) return;
-
-  const winnerName = match.winnerId === match.teamAId ? match.teamAName : match.teamBName;
-  const loserId = match.winnerId === match.teamAId ? match.teamBId : match.teamAId;
-  const loserName = match.winnerId === match.teamAId ? match.teamBName : match.teamAName;
-
-  // ── Single Elimination: advance winner to next WB round ─────
-  if (tournament.format === 'single-elimination') {
-    const nextRound = match.round + 1;
-    const wbNextMatches = tournament.schedule.filter(function(m) { return m.round === nextRound && !m.bracket; });
-    const wbCurrentMatches = tournament.schedule.filter(function(m) { return m.round === match.round && !m.bracket; });
-
-    if (wbNextMatches.length > 0 && wbCurrentMatches.length > 0) {
-      const currentSorted = wbCurrentMatches.sort(function(a, b) { return a.position - b.position; });
-      const matchIdx = currentSorted.findIndex(function(m) { return m.id === matchId; });
-      if (matchIdx >= 0) {
-        const nextMatchIdx = Math.floor(matchIdx / 2);
-        const nextSorted = wbNextMatches.sort(function(a, b) { return a.position - b.position; });
-        const nextMatch = nextSorted[nextMatchIdx];
-        if (nextMatch) {
-          if (matchIdx % 2 === 0) {
-            nextMatch.teamAId = match.winnerId;
-            nextMatch.teamAName = winnerName;
-          } else {
-            nextMatch.teamBId = match.winnerId;
-            nextMatch.teamBName = winnerName;
-          }
-          await db.saveMatch(nextMatch);
-        }
-      }
-    }
-  }
-
-  // ── Double Elimination: WB winner advances, loser drops to LB ─
-  if (tournament.format === 'double-elimination') {
-    if (match.bracket !== 'losers' && match.bracket !== 'final') {
-      // WB match: winner advances in WB, loser drops to LB
-      const nextWbRound = match.round + 1;
-      const wbNextMatches = tournament.schedule.filter(function(m) { return m.round === nextWbRound && m.bracket !== 'losers' && m.bracket !== 'final'; });
-      const wbCurrentMatches = tournament.schedule.filter(function(m) { return m.round === match.round && m.bracket !== 'losers' && m.bracket !== 'final'; });
-
-      // Advance WB winner
-      if (wbNextMatches.length > 0 && wbCurrentMatches.length > 0) {
-        const currentSorted = wbCurrentMatches.sort(function(a, b) { return a.position - b.position; });
-        const matchIdx = currentSorted.findIndex(function(m) { return m.id === matchId; });
-        if (matchIdx >= 0) {
-          const nextMatchIdx = Math.floor(matchIdx / 2);
-          const nextSorted = wbNextMatches.sort(function(a, b) { return a.position - b.position; });
-          const nextMatch = nextSorted[nextMatchIdx];
-          if (nextMatch) {
-            if (matchIdx % 2 === 0) {
-              nextMatch.teamAId = match.winnerId;
-              nextMatch.teamAName = winnerName;
-            } else {
-              nextMatch.teamBId = match.winnerId;
-              nextMatch.teamBName = winnerName;
-            }
-            await db.saveMatch(nextMatch);
-          }
-        }
-      } else if (wbNextMatches.length === 0) {
-        var gfFromWb = tournament.schedule.find(function(m) { return m.bracket === 'final'; });
-        if (gfFromWb && !gfFromWb.teamAId) {
-          gfFromWb.teamAId = match.winnerId;
-          gfFromWb.teamAName = winnerName;
-          await db.saveMatch(gfFromWb);
-        }
-      }
-
-      // Drop loser to LB: find the LB match in the same WB round number
-      // LB rounds correspond to WB rounds: WB round r feeds into LB round r
-      const lbRound = match.round;
-      const lbMatches = tournament.schedule.filter(function(m) { return m.bracket === 'losers' && m.round === lbRound; });
-      if (lbMatches.length > 0) {
-        // Find an open slot in the LB round
-        var openLb = lbMatches.find(function(m) { return !m.teamAId || !m.teamBId; });
-        if (!openLb) {
-          // All slots filled in this LB round, try next LB round
-          openLb = tournament.schedule.find(function(m) { return m.bracket === 'losers' && m.round === lbRound + 1 && (!m.teamAId || !m.teamBId); });
-        }
-        if (openLb) {
-          if (!openLb.teamAId) { openLb.teamAId = loserId; openLb.teamAName = loserName; }
-          else { openLb.teamBId = loserId; openLb.teamBName = loserName; }
-          await db.saveMatch(openLb);
-        }
-      }
-    } else if (match.bracket === 'losers') {
-      // LB match: winner advances in LB
-      const nextLbRound = match.round + 1;
-      const lbNextMatches = tournament.schedule.filter(function(m) { return m.bracket === 'losers' && m.round === nextLbRound; });
-      const lbCurrentMatches = tournament.schedule.filter(function(m) { return m.bracket === 'losers' && m.round === match.round; });
-
-      if (lbNextMatches.length > 0 && lbCurrentMatches.length > 0) {
-        const currentSorted = lbCurrentMatches.sort(function(a, b) { return a.position - b.position; });
-        const matchIdx = currentSorted.findIndex(function(m) { return m.id === matchId; });
-        if (matchIdx >= 0) {
-          const nextMatchIdx = Math.floor(matchIdx / 2);
-          const nextSorted = lbNextMatches.sort(function(a, b) { return a.position - b.position; });
-          const nextMatch = nextSorted[nextMatchIdx];
-          if (nextMatch) {
-            if (matchIdx % 2 === 0) {
-              nextMatch.teamAId = match.winnerId;
-              nextMatch.teamAName = winnerName;
-            } else {
-              nextMatch.teamBId = match.winnerId;
-              nextMatch.teamBName = winnerName;
-            }
-            await db.saveMatch(nextMatch);
-          }
-        }
-      } else if (lbNextMatches.length === 0) {
-        // No more LB rounds — advance to grand final
-        var gf = tournament.schedule.find(function(m) { return m.bracket === 'final'; });
-        if (gf && !gf.teamBId) {
-          gf.teamBId = match.winnerId;
-          gf.teamBName = winnerName;
-          await db.saveMatch(gf);
-        }
-      }
-    }
-    // Grand final: no further advancement needed
-  }
-
-  // ── Swiss Playoffs: advance winner through bracket (uses sourceMatchA/sourceMatchB links) ──
-  if (tournament.format === 'swiss' && match.stage === 'playoffs') {
-    const nextMatch = tournament.schedule.find(function(m) {
-      return m.stage === 'playoffs' &&
-        (m.sourceMatchA === match.matchNumber || m.sourceMatchB === match.matchNumber);
-    });
-    if (nextMatch) {
-      const isTargetA = nextMatch.sourceMatchA === match.matchNumber;
-      if (isTargetA) {
-        if (nextMatch.teamAId !== match.winnerId) {
-          nextMatch.teamAId = match.winnerId;
-          nextMatch.teamAName = winnerName;
-          await db.saveMatch(nextMatch);
-        }
-      } else {
-        if (nextMatch.teamBId !== match.winnerId) {
-          nextMatch.teamBId = match.winnerId;
-          nextMatch.teamBName = winnerName;
-          await db.saveMatch(nextMatch);
-        }
-      }
-    }
-  }
-
-  await db.saveTournament(tournament);
-  setActiveTournament(tournament);
-}
+// Removed: server handles bracket advancement via sync.sendTournamentMatchComplete()
 
 // ── Standings Tab ────────────────────────────────────────────
-async function standingsRender() {
+function standingsRender() {
   const t = getActiveTournament();
   const noTourney = document.getElementById('standings-no-tourney');
   const content = document.getElementById('standings-content');
@@ -3600,7 +3562,7 @@ async function standingsRender() {
   if (!t) { noTourney.style.display = 'block'; content.style.display = 'none'; return; }
   noTourney.style.display = 'none'; content.style.display = 'block';
 
-  const standings = await recalculateStandings(t.id);
+  const standings = t.standings || [];
   const tbody = document.getElementById('standings-body');
 
   if (!standings || standings.length === 0) {
@@ -3634,10 +3596,9 @@ async function tstatsRender() {
   if (!t) { noTourney.style.display = 'block'; content.style.display = 'none'; return; }
   noTourney.style.display = 'none'; content.style.display = 'block';
 
-  // Refresh from DB to get latest match data
-  const tournament = await db.getTournament(t.id);
+  // Use local tournament — server is the source of truth and broadcasts updates
+  const tournament = t;
   if (!tournament) return;
-  setActiveTournament(tournament);
 
   const completedMatches = (tournament.schedule || []).filter(function(m) { return m.status === 'completed'; });
   const total = (tournament.schedule || []).length;

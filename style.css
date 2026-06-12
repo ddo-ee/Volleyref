@@ -1833,3 +1833,16 @@
       padding: 6px 4px;
     }
   }
+:root {
+  touch-action: manipulation;
+}
+
+html,
+body,
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
