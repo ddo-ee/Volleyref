@@ -1,6 +1,310 @@
 {
-  "tournament": null,
+  "tournament": {
+    "id": "tourn-1781255511974-m2u17",
+    "name": "New Tournament",
+    "format": "single-elimination",
+    "roundRobinSemiMode": "1v4-2v3",
+    "setsToWin": 2,
+    "maxSubs": 6,
+    "status": "in-progress",
+    "teams": [
+      {
+        "id": "team-1781255511976-b1vu8",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "name": "rare",
+        "color": "#00c2fd",
+        "players": []
+      },
+      {
+        "id": "team-1781255513778-k0lp8",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "name": "dsfdcs",
+        "color": "#00cfad",
+        "players": []
+      },
+      {
+        "id": "team-1781255515294-h4c8n",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "name": "fsdcvx",
+        "color": "#00bb19",
+        "players": []
+      },
+      {
+        "id": "team-1781255516538-brnks",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "name": "sdfsdcv",
+        "color": "#e0a020",
+        "players": []
+      },
+      {
+        "id": "team-1781255517806-c8ism",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "name": "fsdfsd",
+        "color": "#e04040",
+        "players": []
+      },
+      {
+        "id": "team-1781255519126-c300p",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "name": "fsdfsdf",
+        "color": "#6ab0e0",
+        "players": []
+      }
+    ],
+    "schedule": [
+      {
+        "id": "match-1781255520663-zipy5",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "round": 1,
+        "position": 1,
+        "matchNumber": 1,
+        "sourceMatchA": null,
+        "sourceMatchB": null,
+        "teamAId": "team-1781255511976-b1vu8",
+        "teamBId": null,
+        "teamAName": "rare",
+        "teamBName": "TBD",
+        "status": "completed",
+        "winnerId": "team-1781255511976-b1vu8",
+        "score": {
+          "setsA": 0,
+          "setsB": 0,
+          "setScores": []
+        },
+        "matchData": null,
+        "stage": "single-elimination"
+      },
+      {
+        "id": "match-1781255520663-k3zz4",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "round": 1,
+        "position": 2,
+        "matchNumber": 2,
+        "sourceMatchA": null,
+        "sourceMatchB": null,
+        "teamAId": "team-1781255516538-brnks",
+        "teamBId": "team-1781255517806-c8ism",
+        "teamAName": "sdfsdcv",
+        "teamBName": "fsdfsd",
+        "status": "scheduled",
+        "winnerId": null,
+        "score": {
+          "setsA": 0,
+          "setsB": 0,
+          "setScores": []
+        },
+        "matchData": null,
+        "stage": "single-elimination"
+      },
+      {
+        "id": "match-1781255520663-usayk",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "round": 1,
+        "position": 3,
+        "matchNumber": 3,
+        "sourceMatchA": null,
+        "sourceMatchB": null,
+        "teamAId": "team-1781255513778-k0lp8",
+        "teamBId": null,
+        "teamAName": "dsfdcs",
+        "teamBName": "TBD",
+        "status": "completed",
+        "winnerId": "team-1781255513778-k0lp8",
+        "score": {
+          "setsA": 0,
+          "setsB": 0,
+          "setScores": []
+        },
+        "matchData": null,
+        "stage": "single-elimination"
+      },
+      {
+        "id": "match-1781255520663-240ar",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "round": 1,
+        "position": 4,
+        "matchNumber": 4,
+        "sourceMatchA": null,
+        "sourceMatchB": null,
+        "teamAId": "team-1781255515294-h4c8n",
+        "teamBId": "team-1781255519126-c300p",
+        "teamAName": "fsdcvx",
+        "teamBName": "fsdfsdf",
+        "status": "scheduled",
+        "winnerId": null,
+        "score": {
+          "setsA": 0,
+          "setsB": 0,
+          "setScores": []
+        },
+        "matchData": null,
+        "stage": "single-elimination"
+      },
+      {
+        "id": "match-1781255520663-b4jj0",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "round": 2,
+        "position": 5,
+        "matchNumber": 5,
+        "sourceMatchA": 1,
+        "sourceMatchB": 2,
+        "teamAId": "team-1781255511976-b1vu8",
+        "teamBId": null,
+        "teamAName": "rare",
+        "teamBName": "TBD",
+        "status": "scheduled",
+        "winnerId": null,
+        "score": {
+          "setsA": 0,
+          "setsB": 0,
+          "setScores": []
+        },
+        "matchData": null,
+        "stage": "single-elimination"
+      },
+      {
+        "id": "match-1781255520663-ymvp5",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "round": 2,
+        "position": 6,
+        "matchNumber": 6,
+        "sourceMatchA": 3,
+        "sourceMatchB": 4,
+        "teamAId": "team-1781255513778-k0lp8",
+        "teamBId": null,
+        "teamAName": "dsfdcs",
+        "teamBName": "TBD",
+        "status": "scheduled",
+        "winnerId": null,
+        "score": {
+          "setsA": 0,
+          "setsB": 0,
+          "setScores": []
+        },
+        "matchData": null,
+        "stage": "single-elimination"
+      },
+      {
+        "id": "match-1781255520663-33dqq",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "round": 3,
+        "position": 7,
+        "matchNumber": 7,
+        "sourceMatchA": 5,
+        "sourceMatchB": 6,
+        "teamAId": null,
+        "teamBId": null,
+        "teamAName": "TBD",
+        "teamBName": "TBD",
+        "status": "scheduled",
+        "winnerId": null,
+        "score": {
+          "setsA": 0,
+          "setsB": 0,
+          "setScores": []
+        },
+        "matchData": null,
+        "stage": "single-elimination",
+        "finalsGamesToWin": 1,
+        "finalsGameNumber": 1
+      }
+    ],
+    "createdAt": "2026-06-12T09:11:51.974Z",
+    "lastSavedAt": "2026-06-12T09:11:51.974Z",
+    "standings": [
+      {
+        "id": "tourn-1781255511974-m2u17:team-1781255511976-b1vu8",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "teamId": "team-1781255511976-b1vu8",
+        "teamName": "rare",
+        "color": "#00c2fd",
+        "played": 0,
+        "wins": 0,
+        "losses": 0,
+        "points": 0,
+        "setsWon": 0,
+        "setsLost": 0,
+        "pointsWon": 0,
+        "pointsLost": 0
+      },
+      {
+        "id": "tourn-1781255511974-m2u17:team-1781255513778-k0lp8",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "teamId": "team-1781255513778-k0lp8",
+        "teamName": "dsfdcs",
+        "color": "#00cfad",
+        "played": 0,
+        "wins": 0,
+        "losses": 0,
+        "points": 0,
+        "setsWon": 0,
+        "setsLost": 0,
+        "pointsWon": 0,
+        "pointsLost": 0
+      },
+      {
+        "id": "tourn-1781255511974-m2u17:team-1781255515294-h4c8n",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "teamId": "team-1781255515294-h4c8n",
+        "teamName": "fsdcvx",
+        "color": "#00bb19",
+        "played": 0,
+        "wins": 0,
+        "losses": 0,
+        "points": 0,
+        "setsWon": 0,
+        "setsLost": 0,
+        "pointsWon": 0,
+        "pointsLost": 0
+      },
+      {
+        "id": "tourn-1781255511974-m2u17:team-1781255516538-brnks",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "teamId": "team-1781255516538-brnks",
+        "teamName": "sdfsdcv",
+        "color": "#e0a020",
+        "played": 0,
+        "wins": 0,
+        "losses": 0,
+        "points": 0,
+        "setsWon": 0,
+        "setsLost": 0,
+        "pointsWon": 0,
+        "pointsLost": 0
+      },
+      {
+        "id": "tourn-1781255511974-m2u17:team-1781255517806-c8ism",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "teamId": "team-1781255517806-c8ism",
+        "teamName": "fsdfsd",
+        "color": "#e04040",
+        "played": 0,
+        "wins": 0,
+        "losses": 0,
+        "points": 0,
+        "setsWon": 0,
+        "setsLost": 0,
+        "pointsWon": 0,
+        "pointsLost": 0
+      },
+      {
+        "id": "tourn-1781255511974-m2u17:team-1781255519126-c300p",
+        "tournamentId": "tourn-1781255511974-m2u17",
+        "teamId": "team-1781255519126-c300p",
+        "teamName": "fsdfsdf",
+        "color": "#6ab0e0",
+        "played": 0,
+        "wins": 0,
+        "losses": 0,
+        "points": 0,
+        "setsWon": 0,
+        "setsLost": 0,
+        "pointsWon": 0,
+        "pointsLost": 0
+      }
+    ]
+  },
   "liveMatch": null,
   "currentTournamentMatch": null,
-  "lastUpdated": 1781249522630
+  "lastUpdated": 1781255595569
 }

@@ -4,7 +4,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Aquila">
-<meta name="theme-color" content="#0d1f17">
+<meta name="theme-color" content="#0d1f17" id="meta-theme-color">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aquila Volleyball Committee System</title>
@@ -19,10 +19,10 @@
       <div class="side-panel-title">Aquila</div>
     </div>
     <div class="side-nav-item" id="side-nav-admin" onclick="switchMenu('admin'); switchView('config'); closeSidePanel();">
-      <span class="side-nav-icon">⚙</span> Admin
+      <span class="side-nav-icon"></span> Admin
     </div>
     <div class="side-nav-item active" id="side-nav-committee" onclick="switchMenu('committee'); switchView('setup'); closeSidePanel();">
-      <span class="side-nav-icon">🏐</span> Technical Committee
+      <span class="side-nav-icon"></span> Technical Committee
     </div>
   </div>
 </div>
@@ -118,15 +118,15 @@
 
     <!-- Action Buttons -->
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-      <button class="resource-btn btn-success" onclick="tcSaveTournament()">💾 Save Tournament</button>
-      <button class="resource-btn btn-neutral" onclick="tcExportTournament()">⬇ Export JSON</button>
-      <button class="resource-btn btn-neutral" onclick="tcImportTournament()">⬆ Load JSON</button>
+      <button class="resource-btn btn-success" onclick="tcSaveTournament()">Save Tournament</button>
+      <button class="resource-btn btn-neutral" onclick="tcExportTournament()">Export JSON</button>
+      <button class="resource-btn btn-neutral" onclick="tcImportTournament()">Load JSON</button>
       <input type="file" id="tc-import-file" accept=".json" style="display:none" onchange="tcImportTournamentFile(event)"/>
-      <button class="resource-btn btn-a" style="margin-left:auto" onclick="tcStartTournament()">▶ Start Tournament</button>
+      <button class="resource-btn btn-a" style="margin-left:auto" onclick="tcStartTournament()">Start Tournament</button>
     </div>
 
     <div style="margin-top:24px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <button class="resource-btn btn-danger" onclick="tcResetTournament()">🗑 Reset Tournament</button>
+      <button class="resource-btn btn-danger" onclick="tcResetTournament()">Reset Tournament</button>
     </div>
 
     <!-- Status -->
@@ -167,8 +167,8 @@
         <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Tournament Schedule</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="resource-btn btn-success" onclick="schedGenerate()">🔄 Generate Schedule</button>
-        <button class="resource-btn btn-neutral" onclick="schedToggleView()" id="sched-toggle-btn">🔀 Bracket View</button>
+        <!-- <button class="resource-btn btn-success" onclick="schedGenerate()">Generate Schedule</button>  -->
+        <button class="resource-btn btn-neutral" onclick="schedToggleView()" id="sched-toggle-btn">Bracket View</button>
       </div>
     </div>
     <div id="sched-no-tourney" style="color:var(--text-muted);padding:24px;text-align:center">Load or create a tournament first. Start the tournament to generate a schedule.</div>
@@ -223,7 +223,7 @@
         <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase">Admin</div>
         <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Tournament Statistics</div>
       </div>
-      <button class="resource-btn btn-success" onclick="tstatsExport()">⬇ Export Full Tournament</button>
+      <button class="resource-btn btn-success" onclick="tstatsExport()">Export Full Tournament</button>
     </div>
     <div id="tstats-no-tourney" style="color:var(--text-muted);padding:24px;text-align:center">Load or create a tournament first.</div>
     <div id="tstats-content" style="display:none">
@@ -623,7 +623,7 @@
       <div style="font-family:var(--font-display);font-size:22px;color:var(--court-line)">Statistics & Overview</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn-big btn-success" onclick="exportMatchSummary()" title="Export match data as JSON">⬇ Export JSON</button>
+      <button class="btn-big btn-success" onclick="exportMatchSummary()" title="Export match data as JSON">Export JSON</button>
       <button class="btn-big btn-danger" onclick="resetAll()">Reset Match</button>
     </div>
   </div>
@@ -806,6 +806,11 @@
     </div>
   </div>
 </div>
+
+<!-- Theme Toggle (floating, lower-left) -->
+<button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark theme" aria-label="Toggle theme">
+  <span id="theme-icon"></span>
+</button>
 
 <script src="sync.js"></script>
 <script src="tournament.js"></script>

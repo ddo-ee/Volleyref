@@ -2271,6 +2271,43 @@ function closeSidePanel() {
   overlay.classList.remove('side-panel-overlay-visible');
 }
 
+// ── Theme Toggle ──
+function toggleTheme() {
+  var html = document.documentElement;
+  var isLight = html.getAttribute('data-theme') === 'light';
+  if (isLight) {
+    html.removeAttribute('data-theme');
+    localStorage.setItem('volleyref-theme', 'dark');
+    updateThemeIcon(false);
+  } else {
+    html.setAttribute('data-theme', 'light');
+    localStorage.setItem('volleyref-theme', 'light');
+    updateThemeIcon(true);
+  }
+}
+
+function updateThemeIcon(isLight) {
+  var icon = document.getElementById('theme-icon');
+  if (icon) {
+    var src = isLight ? 'src/night-mode.png' : 'src/light-mode.png';
+    var alt = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+    icon.innerHTML = '<img src="' + src + '" alt="' + alt + '" width="22" height="22" style="display:block;pointer-events:none;">';
+  }
+  var metaTheme = document.getElementById('meta-theme-color');
+  if (metaTheme) {
+    metaTheme.setAttribute('content', isLight ? '#f5f5f7' : '#0d1f17');
+  }
+}
+
+function initTheme() {
+  var saved = localStorage.getItem('volleyref-theme');
+  var isLight = saved === 'light';
+  if (isLight) {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+  updateThemeIcon(isLight);
+}
+
 function switchMenu(group) {
   currentMenu = group;
   var adminTabs = document.getElementById('admin-tabs');
@@ -2316,6 +2353,7 @@ var switchView = function(name) {
 };
 
 // ===================== INIT =====================
+initTheme();
 initSetupUI();
 
 // Attempt to restore a saved match only when opened as a local/offline file.
@@ -2575,7 +2613,7 @@ function tteamsRenderEditor(teamId) {
 
   const players = team.players || [];
   const rows = players.map(function(p, i) {
-    return '<div class="player-roster-row">'
+    return '<div class="player-roster-row" style="display:grid;grid-template-columns:28px 80px 1fr 40px 28px;gap:6px;align-items:center">'
       + '<div class="row-num">' + (i + 1) + '</div>'
       + '<input class="jersey-input" type="number" min="0" max="999" value="' + p.jersey + '" placeholder=" " onchange="tteamsUpdatePlayer(\'' + teamId + '\',' + i + ',\'jersey\',this.value)" style="width:100%"/>'
       + '<input type="text" value="' + escHtml(p.name) + '" placeholder="Player name" onchange="tteamsUpdatePlayer(\'' + teamId + '\',' + i + ',\'name\',this.value)" style="width:100%"/>'
@@ -2589,7 +2627,7 @@ function tteamsRenderEditor(teamId) {
     + '<div style="display:grid;grid-template-columns:28px 80px 1fr 40px 28px;gap:6px;padding:4px 8px;margin-bottom:2px">'
     + '<div></div><div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Jersey</div>'
     + '<div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Name</div>'
-    + '<div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Lib</div><div></div></div>'
+    + '<div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px"></div><div></div></div>'
     + '<div class="player-roster-grid">' + rows + '</div>'
     + (players.length === 0 ? '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">No players yet.</div>' : '')
     + '<button class="resource-btn btn-success" style="margin-top:10px;width:100%;padding:8px" onclick="tteamsAddPlayer(\'' + teamId + '\')">+ Add Player</button>';
@@ -2654,7 +2692,7 @@ function schedRender() {
 
 function schedToggleView() {
   schedCardView = !schedCardView;
-  document.getElementById('sched-toggle-btn').textContent = schedCardView ? '🔀 Bracket View' : '📋 Card View';
+  document.getElementById('sched-toggle-btn').textContent = schedCardView ? 'Bracket View' : 'Card View';
   schedRender();
 }
 
@@ -3424,7 +3462,7 @@ function schedViewResult(matchId) {
     if (lb.length > 0) {
       body += '<div style="margin-top:8px;font-size:9px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">Top Players</div>';
       lb.forEach(function(p, idx) {
-        var medals = ['🥇','🥈','🥉'];
+        var medals = ['','',''];
         body += '<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0">';
         body += '<span>' + (medals[idx] || '&bull;') + ' #' + escHtml(p.jersey) + '</span>';
         body += '<span style="font-weight:600;color:' + hc + '">' + p.points + ' pts</span>';
